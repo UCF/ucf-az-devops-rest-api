@@ -7,8 +7,8 @@ Author: Bradley Smith
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 5.7
-Stable tag: 1.1
-Version: 1.1
+Stable tag: 1.2
+Version: 1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,7 +26,7 @@ Welcome to Brad's Azure Devops REST API 4 UCF
 
 
 == Changelog ==
-= v1.1 [10/18/2022]
+= v1.2 [10/18/2022]
 * first push to see if it works.
 = v1.00 [10/18/2022]
 * Initial released
