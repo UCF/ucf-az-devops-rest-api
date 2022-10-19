@@ -1,0 +1,112 @@
+<?php
+/**
+* Plugin Name: Brad's Azure Devops REST API 4 UCF
+* Plugin URI: https://www.yourwebsiteurl.com/
+* Description: Brad's Azure Devops REST API 4 UCF
+* Version: 1.1
+* Author: Bradley Smith
+* Author URI: http://yourwebsiteurl.com/
+**/
+
+// Load all the nav menu interface functions.
+require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
+
+ 
+register_activation_hook( __FILE__, 'ucf_devops_rest_api' );
+function ucf_devops_rest_api(){
+	global $wpdb;
+	global $wp;
+	
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	
+	
+	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_main (
+		entry_index		int,
+		pat_token		varchar(128),	
+		pat_expire		date,
+		description		varchar(128),
+		organization	varchar(128),
+		project			varchar(128),
+		wiql			text,
+		fields_to_query	text,
+		header_fields	text,
+		field_style		text,
+		char_count		text,
+	PRIMARY KEY(entry_index)		
+	)";
+	dbDelta( $sql );
+	$wpdb->show_errors();
+	$wpdb->flush();
+
+}
+
+require_once( plugin_dir_path( __FILE__ ) . 'includes/admin_menu.php');
+
+require_once( plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php');
+
+function ucf_devops_rest_header() {
+echo '
+<style>
+th  { cursor: pointer; }
+</style>
+<script>
+function eav_sortTable(n) {
+  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById("myTable");
+  switching = true;
+  //Set the sorting direction to ascending:
+  dir = "asc"; 
+  /*Make a loop that will continue until
+  no switching has been done:*/
+  while (switching) {
+    //start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /*Loop through all table rows (except the
+    first, which contains table headers):*/
+    for (i = 1; i < (rows.length - 1); i++) {
+      //start by saying there should be no switching:
+      shouldSwitch = false;
+      /*Get the two elements you want to compare,
+      one from current row and one from the next:*/
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      /*check if the two rows should switch place,
+      based on the direction, asc or desc:*/
+      if (dir == "asc") {
+        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+          //if so, mark as a switch and break the loop:
+          shouldSwitch= true;
+          break;
+        }
+      } else if (dir == "desc") {
+        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+          //if so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      }
+    }
+    if (shouldSwitch) {
+      /*If a switch has been marked, make the switch
+      and mark that a switch has been done:*/
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      //Each time a switch is done, increase this count by 1:
+      switchcount ++;      
+    } else {
+      /*If no switching has been done AND the direction is "asc",
+      set the direction to "desc" and run the while loop again.*/
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
+}
+</script>
+';
+}
+
+
+?>
