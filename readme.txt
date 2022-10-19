@@ -26,7 +26,7 @@ Welcome to Brad's Azure Devops REST API 4 UCF
 
 
 == Changelog ==
-= v1.01 [10/18/2022
+= v1.01 [10/18/2022]
 * First commit via github
 
 = v1.00 [10/18/2022]
