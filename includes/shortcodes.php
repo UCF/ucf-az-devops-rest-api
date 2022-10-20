@@ -10,11 +10,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 			"description,organization,project,wiql,fields_to_query,header_fields,field_style,char_count from " . $wpdb->base_prefix . "ucf_devops_main where entry_index = " . $tablid;
 	$wp_devops_return = $wpdb->get_row($sql);
 
-	//print("<PRE>");
-	//print_r($wp_devops_return);
-	//print("</PRE>");
-	print "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js' id='jquery-js'></script>";
-	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	//print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 	
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
@@ -118,14 +114,14 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "</table>\n";
 	
 	
+	// <script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js" ></script>
 	print '
-	<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js" ></script>
 	<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 	';
 	print '
 	<script>
-	$(function() {
-	$("#' . $tableid . '").dataTable();
+	$(document).ready(function($) {
+	    $("#' . $tableid . '").DataTable();
 	});
 	</script>
 	';
