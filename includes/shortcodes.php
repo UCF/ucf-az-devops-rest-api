@@ -13,7 +13,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	//print("<PRE>");
 	//print_r($wp_devops_return);
 	//print("</PRE>");
-
+	print "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js' id='jquery-js'></script>";
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 	

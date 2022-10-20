@@ -7,8 +7,8 @@ Author: Bradley Smith
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 5.7
-Stable tag: 1.33
-Version: 1.33
+Stable tag: 1.40
+Version: 1.40
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,7 +25,11 @@ Welcome to Brad's Azure Devops REST API 4 UCF
 = How does search work? =
 
 
+
 == Changelog ==
+= v1.40 [10/18/2022]
+* updated shortcodes.php to include link to jquery.min.js' - which I didn't see in the front facing, but did see when I was logged into the site.
+
 = v1.33 [10/18/2022]
 * testing QA push
 
