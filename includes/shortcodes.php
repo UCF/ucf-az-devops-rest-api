@@ -119,6 +119,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 	';
 	print '
+
 	<script>
 	$(document).ready(function($) {
 	    $("#' . $tableid . '").DataTable();
