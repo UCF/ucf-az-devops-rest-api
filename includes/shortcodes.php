@@ -72,7 +72,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	//echo "sizeof:" . $sizeof;
 	print "<table id=\"" . $tableid . "\" class=\"display \" style=\"border-collapse: collapse; width: 100%;\">\n";
 	print "    <thead>\n";
-	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">\n';
+	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	for($x = 0; $x < $FieldArraySize; $x++) {
 		print "            <th style=\"". $FieldStyle[$x] . "\" >" . $HeaderFields[$x] . "</th>\n";
 	}
@@ -99,8 +99,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 		curl_close($curl_workitem);
 		
 		$item_json  = json_decode($item_data , false );
-		//print '<tr style="background-color:#FFC409; border-bottom: 1px solid black;">\n';
-		print '<tr>\n';
+		rint '<tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	
 		for($y = 0; $y < $FieldArraySize; $y++) {
 			if (strtolower($FieldsToQuery[$y]) == "id") {
