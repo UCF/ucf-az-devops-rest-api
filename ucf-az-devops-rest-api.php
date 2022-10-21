@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 2.02
+* Version: 2.03
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -110,9 +110,9 @@ function eav_sortTable(n) {
 add_action( 'wp_enqueue_script', function() {
 			wp_enqueue_script(
 				'ucf-charts-data-tables', // Handle
-				'https://path-to-plugin.com/min.js', // JS URL of the data tables plugin
+				'https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js', // JS URL of the data tables plugin
 				array( 'jquery' ),  // Dependencies
-				'1.12.1', // Version
+				'1.8.2', // Version
 				true      // Load in footer
 			);
 
