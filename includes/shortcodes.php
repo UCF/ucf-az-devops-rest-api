@@ -111,7 +111,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 				if ($CharCount[$y] > 0) 
 					$CellValue = substr($CellValue, 0, 10);
 			}
-			print '<td style="background-color:White">' . $CellValue . "</td>";
+			print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 		}
 		print "</tr>\n";
 		print "\n\n";
