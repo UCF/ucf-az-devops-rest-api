@@ -14,7 +14,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 
 
 //according to Jim Barnes remove for now
-//	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 	
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
