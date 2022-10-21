@@ -7,13 +7,18 @@ function wp_devops_wiql($atts = [], $content = null) {
 
 	$tablid = sanitize_text_field($atts['record']);
 	$sql = "select entry_index,pat_token," . 
-			"description,organization,project,wiql,fields_to_query,header_fields,field_style,char_count from " . $wpdb->base_prefix . "ucf_devops_main where entry_index = " . $tablid;
+		"description,organization,project,wiql,fields_to_query," .
+		"header_fields,field_style,char_count from " . 
+		$wpdb->base_prefix . "ucf_devops_main where entry_index = " . $tablid;
 	$wp_devops_return = $wpdb->get_row($sql);
 
-	//print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+
+//according to Jim Barnes remove for now
+//	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 	
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
+	$tableid = "table_1";
 	
 	$Organization = str_replace(" ", "%20", $wp_devops_return->organization); //"UCF-Operations";  // this is the organization name from Azure DevOps - needs to be html escaped
 	$Project = str_replace(" ", "%20", $wp_devops_return->project); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
@@ -113,25 +118,28 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "    </tbody>\n";
 	print "</table>\n";
 	
-	
-	// <script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js" ></script>
-	print '
-	<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
-	';
-	print '
+	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
 
+//    bradtest();
+//	print '<script type="text/javascript" charset="utf8" src="' . plugins_url( '/js/init.js', __FILE__ ) . '"></script>';
+	
+print '	
+<script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 	<script>
-	$(document).ready(function($) {
-	    $("#' . $tableid . '").DataTable();
-	});
-	</script>
-	';
+
+(function() {
+	$("#' . $tableid . '").dataTable({});
+	}
+)(jQuery);
+</script>
+';
+	
 	
 	$content = ob_get_contents();
 	ob_end_clean();
     return $content;
 }
-
 
 
 add_shortcode ('wp_devops_wiql','wp_devops_wiql');

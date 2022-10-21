@@ -7,8 +7,8 @@ Author: Bradley Smith
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 5.7
-Stable tag: 1.50
-Version: 1.50
+Stable tag: 2.00
+Version: 2.00
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,32 +25,6 @@ Welcome to Brad's Azure Devops REST API 4 UCF
 = How does search work? =
 
 
-
 == Changelog ==
-= v1.50 [10/20/2022]
-* changed DataTables call
-
-= v1.40 [10/18/2022]
-* updated shortcodes.php to include link to jquery.min.js' - which I didn't see in the front facing, but did see when I was logged into the site.
-
-= v1.33 [10/18/2022]
-* testing QA push
-
-= v1.32 [10/18/2022]
-* okay get pull
-
-= v1.31 [10/18/2022]
-* yet another test
-
-=======
-= v1.4 [10/19/2022]
-* Tim's test 0.001
->>>>>>> 2da8166142333a5e236bc8076e55bf4bc566d93d
-= v1.3 [10/18/2022]
-* Brad will check to see if he can push it via Jenkins
-
-= v1.2 [10/18/2022]
-* first push to see if it works.
-
-= v1.00 [10/18/2022]
+= v2.00 [10/18/2022]
 * Initial released
