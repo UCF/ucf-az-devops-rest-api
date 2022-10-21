@@ -120,6 +120,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
 
+
 //    bradtest();
 //	print '<script type="text/javascript" charset="utf8" src="' . plugins_url( '/js/init.js', __FILE__ ) . '"></script>';
 	
