@@ -99,6 +99,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 		curl_close($curl_workitem);
 		
 		$item_json  = json_decode($item_data , false );
+		//print '<tr style="background-color:#FFC409; border-bottom: 1px solid black;">\n';
+		print '<tr>\n';
 	
 		for($y = 0; $y < $FieldArraySize; $y++) {
 			if (strtolower($FieldsToQuery[$y]) == "id") {
