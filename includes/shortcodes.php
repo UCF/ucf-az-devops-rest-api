@@ -70,7 +70,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	//
 
 	//echo "sizeof:" . $sizeof;
-	print "<table id=\"" . $tableid . "\" class=\"display \" style=\"border-collapse: collapse; width: 100%;\">\n";
+	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	for($x = 0; $x < $FieldArraySize; $x++) {
