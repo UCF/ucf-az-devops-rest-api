@@ -119,7 +119,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "    </tbody>\n";
 	print "</table>\n";
 	
-	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
+//	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
 
 
 //    bradtest();
