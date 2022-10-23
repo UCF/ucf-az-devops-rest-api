@@ -106,10 +106,30 @@ function wp_devops_wiql($atts = [], $content = null) {
 				// special case for id of the issue
 				$CellValue = $item_json->{'id'};
 			} else {
-				$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
-					$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
-				if ($CharCount[$y] > 0) 
-					$CellValue = substr($CellValue, 0, 10);
+				// okay at this point we will check to see if we have a question mark
+				// if we do we will take the first field and if there is something there
+				// we will use it, if not we will print the second field regardless of what
+				// is there
+				$has_question_mark = strpos($FieldsToQuery[$y], "?");
+				if ($has_question_mark == FALSE) {
+					# no question mark 
+					$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
+						$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
+					if ($CharCount[$y] > 0) 
+						$CellValue = substr($CellValue, 0, 10);
+				} else {
+					$condit_array = explode("?",$FieldsToQuery[$y]);
+					$condit_array[0] = trim($condit_array[0]);
+					$condit_array[1] = trim($condit_array[1]);
+					$CellValue = (isset($item_json->{'fields'}->{$condit_array[0]}) ? 
+						$item_json->{'fields'}->{$condit_array[0]} : false);
+					if ($CellValue == FALSE) {
+						$CellValue = (isset($item_json->{'fields'}->{$condit_array[1]}) ? 
+						$item_json->{'fields'}->{$condit_array[1]} : false);
+					}
+					if ($CharCount[$y] > 0) 
+						$CellValue = substr($CellValue, 0, 10);
+				}	
 			}
 			print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 		}
