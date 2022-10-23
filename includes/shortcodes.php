@@ -14,7 +14,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 
 
 //according to Jim Barnes remove for now
-//	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 	
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
@@ -70,9 +70,9 @@ function wp_devops_wiql($atts = [], $content = null) {
 	//
 
 	//echo "sizeof:" . $sizeof;
-	print "<table id=\"" . $tableid . "\" class=\"display \" style=\"border-collapse: collapse; width: 100%;\">\n";
+	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 	print "    <thead>\n";
-	print "        <tr style=\"background-color:#FFC409\">\n";
+	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	for($x = 0; $x < $FieldArraySize; $x++) {
 		print "            <th style=\"". $FieldStyle[$x] . "\" >" . $HeaderFields[$x] . "</th>\n";
 	}
@@ -99,6 +99,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 		curl_close($curl_workitem);
 		
 		$item_json  = json_decode($item_data , false );
+		print '<tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	
 		for($y = 0; $y < $FieldArraySize; $y++) {
 			if (strtolower($FieldsToQuery[$y]) == "id") {
@@ -110,7 +111,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 				if ($CharCount[$y] > 0) 
 					$CellValue = substr($CellValue, 0, 10);
 			}
-			print '<td style="background-color:White">' . $CellValue . "</td>";
+			print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 		}
 		print "</tr>\n";
 		print "\n\n";
@@ -118,14 +119,20 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "    </tbody>\n";
 	print "</table>\n";
 	
-	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
+//	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
+
 
 //    bradtest();
 //	print '<script type="text/javascript" charset="utf8" src="' . plugins_url( '/js/init.js', __FILE__ ) . '"></script>';
 	
-print '	
-<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
-<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+//print '<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>';
+print '<script type="text/javascript" charset="utf8" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>';
+
+print'
+<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>';
+
+
+print'
 	<script>
 
 (function() {
