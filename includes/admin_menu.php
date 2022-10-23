@@ -210,12 +210,12 @@ Function ucf_devops_rest_manage(){
 		
 		echo '<form action="" method="post">
 		<table>
-		<tr><td><label for="seachlabel">Description:</label></td><td><input type="text" id="description" name="description" size="100" ></td></tr><p>
+		<tr><td style="width: 10%;" ><label for="seachlabel">Description:</label></td><td "style width: 90%;" ><input type="text" id="description" name="description" size="100" ></td></tr><p>
 		<tr><td><label for="seachlabel">PAT Token:</label></td><td><input type="text" id="pat_token" name="pat_token" size="100" ></td></tr><p>
 		<tr><td><label for="seachlabel">PAT Exipre:</label></td><td><input type="text" id="pat_expire" name="pat_expire" size="100" ></td></tr><p>
 		<tr><td><label for="seachlabel">Organization:</label></td><td><input type="text" id="organization" name="organization" size="100" ></td></tr><p>
 		<tr><td><label for="seachlabel">Project:</label></td><td><input type="text" id="project" name="project" size="100" ></td></tr><p>
-		<tr><td><label for="seachlabel">Wiql:</label></td><td><textarea type="text" id="wiql" name="wiql" cols="100" ></textarea></td></tr><p>
+		<tr><td><label for="seachlabel">Wiql:</label></td><td><textarea type="text" id="wiql" name="wiql" rows="4" ></textarea></td></tr><p>
 		<tr><td><label for="seachlabel">Fields to Query:</label></td><td><textarea type="text" id="fields_to_query" name="fields_to_query" cols="100" ></textarea></td></tr><p>
 		<tr><td><label for="seachlabel">Header Fields:</label></td><td><textarea type="text" id="header_fields" name="header_fields" cols="100" ></textarea></td></tr><p>
 		<tr><td><label for="seachlabel">Field Style:</label></td><td><textarea type="text" id="field_style" name="field_style" cols="100" ></textarea></td></tr><p>
