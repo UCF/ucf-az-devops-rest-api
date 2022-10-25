@@ -11,13 +11,13 @@ Function ucf_devops_rest_main_page(){
 	
 	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
 	
-	dbDelta( $drop );
+	$return = $wpdb->query( $drop );
 	$wpdb->show_errors();
 	$wpdb->flush();
 	
 	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
 	
-	dbDelta( $drop );
+	$return = $wpdb->query( $drop );
 	$wpdb->show_errors();
 	$wpdb->flush();
 
