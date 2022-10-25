@@ -128,6 +128,23 @@ function wp_devops_wiql($atts = [], $content = null) {
 					# no question mark 
 					$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
 						$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
+					// need to check for priority Microsoft.VSTS.Common.Priority
+					if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
+						switch($CellValue) {
+							case "1":
+								$CellValue = "Critical";
+								break;
+							case "2":
+								$CellValue = "High";
+								break;
+							case "3":
+								$CellValue = "Med";
+								break;
+							case "4":
+								$CellValue = "Low";
+								break;
+						}
+					}
 					if ($CharCount[$y] > 0) 
 						$CellValue = substr($CellValue, 0, 10);
 				} else {
