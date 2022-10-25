@@ -7,8 +7,8 @@ Author: Bradley Smith
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 5.7
-Stable tag: 2.24
-Version: 2.24
+Stable tag: 2.25
+Version: 2.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,12 @@ Welcome to Brad's Azure Devops REST API 4 UCF
 
 
 == Changelog ==
+= v2.25 [10/25/2022]
+* major rewrite of admin menu
+* parent/child - added a table
+* drops tables if there on activate so that things start out fresh.
+
+
 = v2.01 [10/18/2022]
 * small change for testing
 
