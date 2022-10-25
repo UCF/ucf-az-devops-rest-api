@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 2.19
+* Version: 2.20
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -21,17 +21,26 @@ function ucf_devops_rest_api(){
 	
 	
 	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_main (
+		wiql_index		int,
+		entry_index		int,
+		wiql			text,
+		fields_to_query	text,
+		header_fields	text,
+		field_style		text,
+		char_count		text,
+	PRIMARY KEY(wiql_index, entry_index )		
+	)";
+	dbDelta( $sql );
+	$wpdb->show_errors();
+	$wpdb->flush();
+	
+	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_setup (
 		entry_index		int,
 		pat_token		varchar(128),	
 		pat_expire		date,
 		description		varchar(128),
 		organization	varchar(128),
 		project			varchar(128),
-		wiql			text,
-		fields_to_query	text,
-		header_fields	text,
-		field_style		text,
-		char_count		text,
 	PRIMARY KEY(entry_index)		
 	)";
 	dbDelta( $sql );

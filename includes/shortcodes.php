@@ -6,12 +6,25 @@ function wp_devops_wiql($atts = [], $content = null) {
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
 	$tablid = sanitize_text_field($atts['record']);
-	$sql = "select entry_index,pat_token," . 
-		"description,organization,project,wiql,fields_to_query," .
+	$sql = "select entry_index, wiql,fields_to_query," .
 		"header_fields,field_style,char_count from " . 
-		$wpdb->base_prefix . "ucf_devops_main where entry_index = " . $tablid;
+		$wpdb->base_prefix . "ucf_devops_main where wiql_index = " . $tablid;
 	$wp_devops_return = $wpdb->get_row($sql);
+	if ($wp_devops_return == false) {
+		$wpdb->show_errors();
+		$wpdb->flush();
+	}
+		
+	$entry_index = $wp_devops_return->entry_index;
 
+	$sql_setup = "select entry_index,pat_token," . 
+		"description,organization,project from " . 
+		$wpdb->base_prefix . "ucf_devops_setup where entry_index = " . $entry_index;
+	$wp_devops_setup = $wpdb->get_row($sql_setup);
+	if ($wp_devops_setup == false) {
+		$wpdb->show_errors();
+		$wpdb->flush();
+	}
 
 //according to Jim Barnes remove for now
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
@@ -20,9 +33,9 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
 	$tableid = "table_1";
 	
-	$Organization = str_replace(" ", "%20", $wp_devops_return->organization); //"UCF-Operations";  // this is the organization name from Azure DevOps - needs to be html escaped
-	$Project = str_replace(" ", "%20", $wp_devops_return->project); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
-	$PAT= $wp_devops_return->pat_token; //"gx6jvhpecqdaneevel7owmtr7yd5ja5p675t3hwnbamvmgkuyq7q"; // This is currently my Personal Access Token. This needs to be changed
+	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization); //"UCF-Operations";  // this is the organization name from Azure DevOps - needs to be html escaped
+	$Project = str_replace(" ", "%20", $wp_devops_setup->project); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
+	$PAT= $wp_devops_setup->pat_token; //"gx6jvhpecqdaneevel7owmtr7yd5ja5p675t3hwnbamvmgkuyq7q"; // This is currently my Personal Access Token. This needs to be changed
 	$Wiql = $wp_devops_return->wiql; 
 	//'"Select [System.Id] from WorkItems where [Custom.UCFDisplayOnWebsite] = True and [System.State] = \"Done\" "';
 	$FieldsToQuery = explode(",",$wp_devops_return->fields_to_query);
@@ -106,10 +119,30 @@ function wp_devops_wiql($atts = [], $content = null) {
 				// special case for id of the issue
 				$CellValue = $item_json->{'id'};
 			} else {
-				$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
-					$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
-				if ($CharCount[$y] > 0) 
-					$CellValue = substr($CellValue, 0, 10);
+				// okay at this point we will check to see if we have a question mark
+				// if we do we will take the first field and if there is something there
+				// we will use it, if not we will print the second field regardless of what
+				// is there
+				$has_question_mark = strpos($FieldsToQuery[$y], "?");
+				if ($has_question_mark == FALSE) {
+					# no question mark 
+					$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
+						$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
+					if ($CharCount[$y] > 0) 
+						$CellValue = substr($CellValue, 0, 10);
+				} else {
+					$condit_array = explode("?",$FieldsToQuery[$y]);
+					$condit_array[0] = trim($condit_array[0]);
+					$condit_array[1] = trim($condit_array[1]);
+					$CellValue = (isset($item_json->{'fields'}->{$condit_array[0]}) ? 
+						$item_json->{'fields'}->{$condit_array[0]} : false);
+					if ($CellValue == FALSE) {
+						$CellValue = (isset($item_json->{'fields'}->{$condit_array[1]}) ? 
+						$item_json->{'fields'}->{$condit_array[1]} : false);
+					}
+					if ($CharCount[$y] > 0) 
+						$CellValue = substr($CellValue, 0, 10);
+				}	
 			}
 			print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 		}
