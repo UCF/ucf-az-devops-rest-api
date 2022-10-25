@@ -3,22 +3,56 @@
 Function ucf_devops_rest_main_page(){
 	global $wpdb;
 	global $wp;
-	
-	ob_start(); // this allows me to use 1 echo at the end
-	
+
 	echo "Welcome to Setup Page";
+	print("<PRE>\n");
 	
-	print("<PRE>wpdb:\n");
-	print_r($wpdb);
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );	
+	
+	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
+	
+	dbDelta( $drop );
+	$wpdb->show_errors();
+	$wpdb->flush();
+	
+	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
+	
+	dbDelta( $drop );
+	$wpdb->show_errors();
+	$wpdb->flush();
+
+
+
+	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_main (
+		wiql_index		int,
+		entry_index		int,
+		wiql			text,
+		fields_to_query	text,
+		header_fields	text,
+		field_style		text,
+		char_count		text,
+	PRIMARY KEY(wiql_index, entry_index )		
+	)";
+	dbDelta( $sql );
+	$wpdb->show_errors();
+	$wpdb->flush();
+	
+	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_setup (
+		entry_index		int,
+		pat_token		varchar(128),	
+		pat_expire		date,
+		description		varchar(128),
+		organization	varchar(128),
+		project			varchar(128),
+	PRIMARY KEY(entry_index)		
+	)";
+	dbDelta( $sql );
+	$wpdb->show_errors();
+	$wpdb->flush();
+	
+	
 	echo "</PRE>";
-	
-	print("<PRE>wp:\n");
-	print_r($wp);
-	echo "</PRE>";
-	
-	$content = ob_get_contents();
-	ob_end_clean();
-	echo $content;
+
 
 }
 
