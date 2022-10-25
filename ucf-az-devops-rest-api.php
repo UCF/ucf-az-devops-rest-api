@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 2.29
+* Version: 2.30
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -12,7 +12,7 @@
 require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
 
 add_action('plugins_loaded', 'myplugin_update');
-myplugin_update(){
+function myplugin_update(){
 	global $wpdb;
 	global $wp;
 		
