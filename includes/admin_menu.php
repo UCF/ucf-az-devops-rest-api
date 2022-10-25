@@ -357,6 +357,33 @@ $('.ok').on('click', function(e){
 		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 		echo '<input type="submit" value="Test DevOps" name="testdevops"  >';
 		echo '<br> </form>';
+<<<<<<< HEAD
+=======
+	}else {	
+		echo '<div class="wrap"><div id="icon-options-general" class="icon32"><br></div><h2>Manage Records</h2></div>';
+		
+		echo '<form action="" method="post">
+		<table>
+		<tr><td style="width: 10%;" ><label for="seachlabel">Description:</label></td><td "style width: 90%;" ><input type="text" id="description" name="description" size="100" ></td></tr><p>
+		<tr><td><label for="seachlabel">PAT Token:</label></td><td><input type="text" id="pat_token" name="pat_token" size="100" ></td></tr><p>
+		<tr><td><label for="seachlabel">PAT Exipre:</label></td><td><input type="text" id="pat_expire" name="pat_expire" size="100" ></td></tr><p>
+		<tr><td><label for="seachlabel">Organization:</label></td><td><input type="text" id="organization" name="organization" size="100" ></td></tr><p>
+		<tr><td><label for="seachlabel">Project:</label></td><td><input type="text" id="project" name="project" size="100" ></td></tr><p>
+		<tr><td><label for="seachlabel">Wiql:</label></td><td><textarea type="text" id="wiql" name="wiql" rows="4" ></textarea></td></tr><p>
+		<tr><td><label for="seachlabel">Fields to Query:</label></td><td><textarea type="text" id="fields_to_query" name="fields_to_query" cols="100" ></textarea></td></tr><p>
+		<tr><td><label for="seachlabel">Header Fields:</label></td><td><textarea type="text" id="header_fields" name="header_fields" cols="100" ></textarea></td></tr><p>
+		<tr><td><label for="seachlabel">Field Style:</label></td><td><textarea type="text" id="field_style" name="field_style" cols="100" ></textarea></td></tr><p>
+		<tr><td><label for="seachlabel">Char Count:</label></td><td><textarea type="text" id="char_count" name="char_count" cols="100" ></textarea></td></tr><p>
+		</table>
+		<input type="submit" value="addrecord" name="addrecord">
+		 <br> </form>';
+	
+	}
+	
+	
+	
+	// Next up is to show what values we currently have
+>>>>>>> 0d19e9c80821644a3b7094c29cab9fb929fe2c7e
 
 	} else if (isset($_GET['wiql'])) {
 		$tablid =  sanitize_text_field($_GET['wiql']);
