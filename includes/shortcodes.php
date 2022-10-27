@@ -209,8 +209,21 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	
 	print '<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
-	print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
-	print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
+	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css';
+	$css_open = fopen($css_file, "r");
+	$css_data = fread($css_open, filesize($css_file));
+	fclose($css_open)
+	print "<style>" . $css_data . "</stype>";
+	
+	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css';
+	$css_open = fopen($css_file, "r");
+	$css_data = fread($css_open, filesize($css_file));
+	fclose($css_open)
+	print "<style>" . $css_data . "</stype>";
+	
+	
+//	print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
+//	print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
 	
 	
 	$sql_setup = "select entry_index,pat_token," . 
