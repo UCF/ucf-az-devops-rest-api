@@ -568,7 +568,7 @@ li.extra {
 		//$sprint_startDate
 		
 		print '<div class="chart-row">' . "\n"; // need 1 div at end
-		print '<div class="chart-row-item" >' . $x+1 . '</div>' . "\n";
+		print '<div class="chart-row-item" >' . ($x+1) . '</div>' . "\n";
 //		
 //        print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
 //		
