@@ -569,16 +569,16 @@ li.extra {
 		
 		print '<div class="chart-row">' . "\n"; // need 1 div at end
 		print '<div class="chart-row-item" >' . ($x+1) . '</div>' . "\n";
-//		
-//        print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
-//		
-//		print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
-//		print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date("m/d/Y", strtotime($sprint_startDate)) . "</font>";
-//		print '</li>';
-//        
-//		
-//		// now we add the popup stuff
-//		print '</ul>' ;
+		
+        print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
+		
+		print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
+		print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date("m/d/Y", strtotime($sprint_startDate)) . "</font>";
+		print '</li>';
+        
+		
+		// now we add the popup stuff
+		print '</ul>' ;
 
 		print "</div>"; //end for class=chart-row
 		
