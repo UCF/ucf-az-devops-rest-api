@@ -168,12 +168,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	}
 	print "    </tbody>\n";
 	print "</table>\n";
-	
-//	print plugins_url( '/js/init.js', __FILE__ ) . "<P>";
 
-
-//    bradtest();
-//	print '<script type="text/javascript" charset="utf8" src="' . plugins_url( '/js/init.js', __FILE__ ) . '"></script>';
 	
 //print '<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>';
 print '<script type="text/javascript" charset="utf8" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>';
@@ -540,7 +535,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	
 	
 print'
-<script type="text/javascript" charset="utf8" src="/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js"></script>';
+<script type="text/javascript" charset="utf8" src="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js"></script>';
 
 	return;
 
