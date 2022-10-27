@@ -207,23 +207,23 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$tablid = sanitize_text_field($atts['record']); 
 	ob_start(); // this allows me to use echo instead of using concat all strings
 	
-	print '<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
-	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css';
-	$css_open = fopen($css_file, "r");
-	$css_data = fread($css_open, filesize($css_file));
-	fclose($css_open);
-	print "<style>" . $css_data . "</stype>";
+
+//	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css';
+//	$css_open = fopen($css_file, "r");
+//	$css_data = fread($css_open, filesize($css_file));
+//	fclose($css_open);
+//	print "<style>" . $css_data . "</stype>";
 	
 	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css';
 	$css_open = fopen($css_file, "r");
 	$css_data = fread($css_open, filesize($css_file));
 	fclose($css_open);
 	print "<style>" . $css_data . "</stype>";
-	
-	
-//	print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
-//	print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
+		
+//print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
+//print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
 	
 	
 	$sql_setup = "select entry_index,pat_token," . 
@@ -312,39 +312,64 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$done=1;
 	$month_to_show = 12;
 	
+	
+	//width: ". (($month_to_show * 110)+60) . "px;
+	//grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); /* was 1fr */
+	//grid-template-columns: repeat(" . $month_to_show . ", 1fr);
 	print "<style>
 
-.mybescontainer {
-		overflow: hidden;   /* */	
-		overflow-x: hidden;
-		overflow-y: hidden;
-		
-      width: ". (($month_to_show * 110)+60) . "px;
-	  height: auto;
-	  /* min-height: 300px; /* */
-	  /* max-height: 1200px;/* */
-      /* min-width: 650px; /* */
-      
-      padding: 50px;      
+mybescontainer {
+	border: 10px solid green;
+	display: block;
+	position: relative;
+	/* margin: 0; */
+    padding: 50px; */
+    /* box-sizing: border-box;     */
+  }
+ 
+.chart {
+	width: ". (($month_to_show * 110)+60) . "px;
+      display: grid;
+      /* border: 2px solid #000; */
+	  border: 2px solid #000;;
+      position: relative;
+      overflow: hidden;  
+	  padding: 0px;
+	  
+
+  }
+.chart-row {
+    display: grid;      
+    grid-template-columns: 50px 1fr;
+    background-color: #DCDCDC;
   }
 .chart-period {
-	color:  #fff;
-	background-color:  #708090 !important;
-	border-bottom: 2px solid #000; 
-	grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); /* was 1fr */
-	}
+    color:  #fff;
+    background-color:  #708090 !important;
+    border-bottom: 2px solid #000; 
+    grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); /* was 1fr */
+  }
 .chart-lines {
     position: absolute;
     height: 100%;
     width: 100%;
     background-color: transparent;
-    grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); * was 1fr */
-
-}
-.chart-lines > span {
-    display: block;
-    border-right: 1px solid rgba(0, 0, 0, 0.3);
+    grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); /* was 1fr */
   }
+.chart-lines > span {  
+	display: block;  border-right: 1px solid rgba(0, 0, 0, 0.3);
+}
+.chart-row-item {
+    background-color:#808080;
+    border: 1px solid  #000;
+    border-top: 0;
+    border-left: 0;      
+    padding: 20px 0;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+  } 
+
 .chart-row-bars {
     list-style: none;
     display: grid;
@@ -353,8 +378,23 @@ function wp_devops_current_sprint($atts = [], $content = null) {
     grid-template-columns: repeat(" . $month_to_show . ", 1fr);
     grid-gap: 10px 0;
     border-bottom: 1px solid  #000;
+  }
+li.extra {
+    font-weight: 450;
+    text-align: left;
+    font-size: 15px;
+    min-height: 15px;
+    background-color: #708090;
+    padding: 5px 15px;
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    border-radius: 15px;
+  }
 
-  }\n";
+
+\n";
 
 
 	// currently we only handle 10 sprints
@@ -416,7 +456,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	print "</style>\n";
 	// Setup Start of Graph
 	//print '<div class="container">';
-	print '<div class="mybescontainer">';
+//	print '<div class="mybescontainer">';
 	print '<div class="chart"> ';
 	print '<div class="chart-row chart-period">';
 	print '<div class="chart-row-item"></div>	';
@@ -440,8 +480,8 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	print "</div>\n"; //ending for class="chart-row chart-lines"
 	
 	
-//print "</div>\n"; // temp end for mybeschart
-//print "</div>\n"; // temp end for mybescontainer
+//print "</div>\n"; // temp end for chart
+//print "</div>\n"; // temp end for bescontainer
 //return;
 	
 	for($x = 0; $x < $sizeof; $x++){
@@ -532,7 +572,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 		
         print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
 		
-		print '  <li class="chart-li-' . $count_word[$x] . ' chart-li" >' ;
+		print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
 		print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date("m/d/Y", strtotime($sprint_startDate)) . "</font>";
 		print '</li>';
         
@@ -544,7 +584,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 		
 	}	
 	print "</div>"; //class="chart"
-	print "</div>"; //class="container"
+	//print "</div>"; //class="mybescontainer"
 	//print "</div>\n"; //class="container"
 	
 	
