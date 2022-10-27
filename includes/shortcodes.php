@@ -202,6 +202,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$months = array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
 	$bg_color = array("#588BAE","#0080FF","#4682B4","#57A0D3","#0E4D92","#4F97A3","#73C2FB","#0080FF", "#588BAE","#0080FF","#4682B4","#57A0D3","#0E4D92","#4F97A3","#73C2FB","#0080FF");
 
+
 	 
 	$tablid = sanitize_text_field($atts['record']); 
 	ob_start(); // this allows me to use echo instead of using concat all strings
