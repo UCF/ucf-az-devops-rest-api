@@ -202,18 +202,19 @@ print'
 function wp_devops_current_sprint($atts = [], $content = null) {
 	
 	global $wpdb;
+	global $wp;
 	
 	$months = array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
 	$bg_color = array("#588BAE","#0080FF","#4682B4","#57A0D3","#0E4D92","#4F97A3","#73C2FB","#0080FF", "#588BAE","#0080FF","#4682B4","#57A0D3","#0E4D92","#4F97A3","#73C2FB","#0080FF");
 
 	 
 	$tablid = sanitize_text_field($atts['record']); 
-//	ob_start(); // this allows me to use echo instead of using concat all strings
+	ob_start(); // this allows me to use echo instead of using concat all strings
 	
 	print '<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
-	print '<link rel="stylesheet" type="text/css" href="/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
-	print '<link rel="stylesheet" type="text/css" href="/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
+	print '<link rel="stylesheet" type="text/css" href="' . home_url( $wp->request ) . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
+	print '<link rel="stylesheet" type="text/css" href="' . home_url( $wp->request ) . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
 	
 	
 	$sql_setup = "select entry_index,pat_token," . 
@@ -224,6 +225,8 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 		$wpdb->show_errors();
 		$wpdb->flush();
 	}
+	
+
 
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
 	
@@ -542,9 +545,9 @@ print'
 	return;
 
 		
-//	$content = ob_get_contents();
-//	ob_end_clean();
- //   return $content;
+	$content = ob_get_contents();
+	ob_end_clean();
+    return $content;
 }
 add_shortcode ('wp_devops_wiql','wp_devops_wiql');
 add_shortcode ('wp_devops_current_sprint','wp_devops_current_sprint');
