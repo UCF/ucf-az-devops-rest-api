@@ -328,7 +328,7 @@ mybescontainer {
   }
  
 .chart {
-	width: ". (($month_to_show * 110)+60) . "px;
+	width: ". (($month_to_show * 110)+50) . "px;
       display: grid;
       /* border: 2px solid #000; */
 	  border: 2px solid #000;;
