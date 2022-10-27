@@ -480,9 +480,9 @@ li.extra {
 	print "</div>\n"; //ending for class="chart-row chart-lines"
 	
 	
-print "</div>\n"; // temp end for chart
+//print "</div>\n"; // temp end for chart
 //print "</div>\n"; // temp end for bescontainer
-return;
+
 	
 	for($x = 0; $x < $sizeof; $x++){
 		/* collect all the needed information */
