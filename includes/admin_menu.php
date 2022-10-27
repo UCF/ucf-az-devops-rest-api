@@ -4,55 +4,7 @@ Function ucf_devops_rest_main_page(){
 	global $wpdb;
 	global $wp;
 
-	echo "Welcome to Setup Page";
-	print("<PRE>\n");
-	
-	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );	
-	
-	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
-	
-	$return = $wpdb->query( $drop );
-	$wpdb->show_errors();
-	$wpdb->flush();
-	
-	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
-	
-	$return = $wpdb->query( $drop );
-	$wpdb->show_errors();
-	$wpdb->flush();
-
-
-
-	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_main (
-		wiql_index		int,
-		entry_index		int,
-		wiql			text,
-		fields_to_query	text,
-		header_fields	text,
-		field_style		text,
-		char_count		text,
-	PRIMARY KEY(wiql_index, entry_index )		
-	)";
-	dbDelta( $sql );
-	$wpdb->show_errors();
-	$wpdb->flush();
-	
-	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_setup (
-		entry_index		int,
-		pat_token		varchar(128),	
-		pat_expire		date,
-		description		varchar(128),
-		organization	varchar(128),
-		project			varchar(128),
-	PRIMARY KEY(entry_index)		
-	)";
-	dbDelta( $sql );
-	$wpdb->show_errors();
-	$wpdb->flush();
-	
-	
-	echo "</PRE>";
-
+	echo "Welcome to Information Page";
 
 }
 
@@ -531,13 +483,13 @@ $('.ok').on('click', function(e){
 		$sql = "select entry_index,wiql_index," . 
 				"wiql,fields_to_query,header_fields,field_style,char_count from " . $wpdb->base_prefix . "ucf_devops_main" .
 				" where length(fields_to_query) <> 0";
-		echo '<table style="width: 50%; border: 1px solid black" id="myTable" >';
+		echo '<table style="width: 80%; border: 1px solid black" id="myTable" >';
 		echo '<tr >
-		<th style="width: 30px; border: 1px solid black;" >ShortCode</th>
+		<th style="width: 150px; border: 1px solid black;" >ShortCode</th>
 		<th style="width: 10px; border: 1px solid black;" >WiQL ID</th>
 		<th style="width: 10px; border: 1px solid black;" >Entry ID</th>		
-		<th style="width: 50px; border: 1px solid black;" >Wiql</th>
-		<th style="width: 40px; border: 1px solid black;" >Fields to Query</th>
+		<th style="width: 30px; border: 1px solid black;" >Wiql</th>
+		<th style="width: 30px; border: 1px solid black;" >Fields to Query</th>
 		<th style="width: 30px; border: 1px solid black;" >Header Fields</th>
 		</tr>
 		';

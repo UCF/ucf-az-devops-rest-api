@@ -199,5 +199,353 @@ print'
 }
 
 
+function wp_devops_current_sprint($atts = [], $content = null) {
+	
+	global $wpdb;
+	
+	$months = array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+	$bg_color = array("#588BAE","#0080FF","#4682B4","#57A0D3","#0E4D92","#4F97A3","#73C2FB","#0080FF", "#588BAE","#0080FF","#4682B4","#57A0D3","#0E4D92","#4F97A3","#73C2FB","#0080FF");
+
+	 
+	$tablid = sanitize_text_field($atts['record']); 
+//	ob_start(); // this allows me to use echo instead of using concat all strings
+	
+	print '<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	
+	print '<link rel="stylesheet" type="text/css" href="/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
+	print '<link rel="stylesheet" type="text/css" href="/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
+	
+	
+	$sql_setup = "select entry_index,pat_token," . 
+		"description,organization,project from " . 
+		$wpdb->base_prefix . "ucf_devops_setup where entry_index = " . $tablid;
+	$wp_devops_setup = $wpdb->get_row($sql_setup);
+	if ($wp_devops_setup == false) {
+		$wpdb->show_errors();
+		$wpdb->flush();
+	}
+
+	$tableid = "table_" . rand();  //this allows my code be on the page more than once
+	
+	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization); 
+	$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
+	$PAT= $wp_devops_setup->pat_token;  
+
+	#
+	# In order to get all sprints/iterations we first need to get the Project ID
+	$url = "https://dev.azure.com/" . $Organization . "/_apis/projects?api-version=6.0";
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_URL, $url);
+	curl_setopt($curl, CURLOPT_POST, FALSE);
+	curl_setopt($curl, CURLOPT_USERPWD, ':' . $PAT );
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+	$data = curl_exec($curl);
+	curl_close($curl);
+	$myjson  = json_decode($data , false );
+	
+	$ListOfProjects = $myjson->value;
+
+	
+	$ProjectID = $ListOfProjects[0]->{'id'};
+	$ProjectName = $ListOfProjects[0]->{'name'};
+	#
+	# Next up is to get the Team
+	$url = "https://dev.azure.com/" . $Organization . "/_apis/projects/" . $ProjectID . "/properties?api-version=5.1-preview.1";
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_URL, $url);
+	curl_setopt($curl, CURLOPT_POST, FALSE);
+	curl_setopt($curl, CURLOPT_USERPWD, ':' . $PAT );
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+	$data = curl_exec($curl);
+	curl_close($curl);
+	$myjson  = json_decode($data , false );
+	
+	$List = $myjson->value;
+	$sizeof = count($List);
+	$team_id = "";
+	for($x = 0; $x < $sizeof; $x++){
+		$t_name = $List[$x]->{'name'};
+		$t_value = $List[$x]->{'value'};
+		if ( $t_name == "System.Microsoft.TeamFoundation.Team.Default" ) {
+			$team_id = $t_value;
+			break;
+		}
+	}
+	
+	//print("Team Name:" . $t_name . " -> Team id:" . $team_id . "\n");
+	
+	#
+	# Next up is to get all iterations and loop through them
+	$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/" . $team_id . "/_apis/work/teamsettings/iterations?api-version=6.0";
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_URL, $url);
+	curl_setopt($curl, CURLOPT_POST, FALSE);
+	curl_setopt($curl, CURLOPT_USERPWD, ':' . $PAT );
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+	$data = curl_exec($curl);
+	curl_close($curl);
+	$myjson  = json_decode($data , false );
+	
+	$List = $myjson->value;
+	$sizeof = count($List);
+	
+	$cur_yr = date('Y');
+	$cur_month = date('m') - 2;
+	if ($cur_month < 0) {
+		$cur_month = $cur_month + 12;
+		$cur_yr = $cur_yr - 1;
+	}
+	
+	$loop_month = $cur_month;
+	$done=1;
+	$month_to_show = 12;
+	
+	print "<style>
+
+.mybescontainer {
+		overflow: hidden;   /* */	
+		overflow-x: hidden;
+		overflow-y: hidden;
+		
+      width: ". (($month_to_show * 110)+60) . "px;
+	  height: auto;
+	  /* min-height: 300px; /* */
+	  /* max-height: 1200px;/* */
+      /* min-width: 650px; /* */
+      
+      padding: 50px;      
+  }
+.chart-period {
+	color:  #fff;
+	background-color:  #708090 !important;
+	border-bottom: 2px solid #000; 
+	grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); /* was 1fr */
+	}
+.chart-lines {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: transparent;
+    grid-template-columns: 50px repeat(" . $month_to_show . ", 110px); * was 1fr */
+
+}
+.chart-lines > span {
+    display: block;
+    border-right: 1px solid rgba(0, 0, 0, 0.3);
+  }
+.chart-row-bars {
+    list-style: none;
+    display: grid;
+    padding: 15px 0;
+    margin: 0;
+    grid-template-columns: repeat(" . $month_to_show . ", 1fr);
+    grid-gap: 10px 0;
+    border-bottom: 1px solid  #000;
+
+  }\n";
+
+
+	// currently we only handle 10 sprints
+	$count_word = array("one","two","three","four","five","six","seven", "eight", "nine", "ten");
+	for($x = 0; $x < $sizeof; $x++){
+		$sprint_name = $List[$x]->{'name'};
+		$sprint_id = $List[$x]->{'id'};
+		$sprint_path = $List[$x]->{'path'};
+		
+		$sprint_attrib = $List[$x]->{'attributes'};
+		// format: 2022-10-24T00:00:00Z
+		$sprint_startDate = $sprint_attrib->{'startDate'}; 
+		$sprint_finishDate = $sprint_attrib->{'finishDate'};
+		$sprint_timeFrame = $sprint_attrib->{'timeFrame'};
+		
+		//$month_to_show = 12;
+		//$cur_yr = date('Y'); assigned above
+		//$cur_month = date('m') - 2; //assiged above 
+
+		$mon_str = substr($sprint_attrib->{'startDate'}, 5, 2);
+		$mon_end = substr($sprint_attrib->{'finishDate'}, 5, 2);
+		
+		$yr_str = substr($sprint_attrib->{'startDate'}, 0, 4);
+		$yr_end = substr($sprint_attrib->{'finishDate'}, 0, 4);
+		
+		
+		// so if $cur_month = start of graph 
+		// then $cur_month + 12 = end of graph
+		$cur_endmon = $cur_month + 12;
+		$cur_endyr = $cur_yr;
+		if ( $cur_endmon > 12) {
+			$cur_endmon = $cur_endmon - 12;
+			$cur_endyr = $cur_endyr + 1;
+		}
+		// so the first thing is to find out is about start date
+		if(($yr_str == $cur_yr)&&($mon_str < $cur_month))
+			$graph_start = 1; // starts before so.....
+		else if (($yr_str == $cur_yr) && ($mon_str >= $cur_month))
+			$graph_start = $mon_str - $cur_month;
+		else if (($yr_str == $cur_endyr)&& ($mon_str <= $cur_endmon))
+			$graph_start = $mon_str - $cur_month + 12;
+		else
+			$graph_start = $month_to_show;
+		// next up is to figure out month length
+		$graph_len = (($yr_end - $yr_str) * 12) + ($mon_end - $mon_str) + $graph_start;
+		if($graph_len > $month_to_show)
+			$graph_len = $month_to_show;
+		
+		if($graph_start < 1)
+			$graph_start = 1;
+		
+		// graph_start = start column
+		// graph_end = how man columns to span
+		print 'ul .chart-li-' . $count_word[$x] . ' { ' . "\n" .
+			'grid-column: '. $graph_start . '/' . ($graph_len+1) . ';' . "\n" .
+			'background-color:#588BAE;  }';
+		print "\n";
+	}	
+	print "</style>\n";
+	// Setup Start of Graph
+	//print '<div class="container">';
+	print '<div class="mybescontainer">';
+	print '<div class="chart"> ';
+	print '<div class="chart-row chart-period">';
+	print '<div class="chart-row-item"></div>	';
+	$done = 1;
+	while($done <= $month_to_show) {
+		print("<span>" . $months[$loop_month] . "</span>" );
+			
+		$loop_month = $loop_month + 1;
+		if ($loop_month == 12)
+			$loop_month = 0;
+		$done = $done + 1;
+	}
+	print "</div>\n"; // ending class="chart-row chart-period"
+	
+	print '<div class="chart-row chart-lines">';
+	$done=1;
+	while ($done <= $month_to_show) {
+		print ("<span></span>");
+		$done = $done + 1;
+	}
+	print "</div>\n"; //ending for class="chart-row chart-lines"
+	
+	
+//print "</div>\n"; // temp end for mybeschart
+//print "</div>\n"; // temp end for mybescontainer
+//return;
+	
+	for($x = 0; $x < $sizeof; $x++){
+		/* collect all the needed information */
+		$sprint_name = $List[$x]->{'name'};
+		$sprint_id = $List[$x]->{'id'};
+		$sprint_path = $List[$x]->{'path'};
+		$sprint_attrib = $List[$x]->{'attributes'};
+		// format: 2022-10-24T00:00:00Z
+		$sprint_startDate = $sprint_attrib->{'startDate'}; 
+		$sprint_finishDate = $sprint_attrib->{'finishDate'};
+		$sprint_timeFrame = $sprint_attrib->{'timeFrame'};
+		
+		$sprint_url = $List[$x]->{'url'};
+		# For each sprint/iterations, we will get all the items
+		$url2 = "https://dev.azure.com/" . $Organization . "/" . $Project . "/" . $team_id . "/_apis/work/teamsettings/iterations/" . $sprint_id . "/workitems?api-version=6.0-preview.1";
+		
+		$curl2 = curl_init();
+		curl_setopt($curl2, CURLOPT_URL, $url2);
+		curl_setopt($curl2, CURLOPT_POST, FALSE);
+		curl_setopt($curl2, CURLOPT_USERPWD, ':' . $PAT );
+		curl_setopt($curl2, CURLOPT_RETURNTRANSFER, true );
+		$data2 = curl_exec($curl2);
+		curl_close($curl2);
+		$myjson2  = json_decode($data2 , false );
+		
+		//print("should show all iteractions\n");
+		//print_r($myjson2);
+		
+		$worklistitems = $myjson2->workItemRelations;
+		$sizeof2 = count($worklistitems);
+		
+		print("<script>\n");
+		print "var Text_" . $x . " = \"";
+		$sprint_goal = "";
+		for ( $w_z = 0; $w_z < $sizeof2 ; $w_z++) {
+				$w_target = $worklistitems[$w_z]->{'target'};
+				$w_id = $w_target->id;
+				$w_url = $w_target->url;	
+							#
+				# next up go and get the information for each workitem
+				$url3 = $w_url;
+				$curl3 = curl_init();
+				curl_setopt($curl3, CURLOPT_URL, $url3);
+				curl_setopt($curl3, CURLOPT_POST, FALSE);
+				curl_setopt($curl3, CURLOPT_USERPWD, ':' . $PAT );
+				curl_setopt($curl3, CURLOPT_RETURNTRANSFER, true );
+				$data3 = curl_exec($curl3);
+				curl_close($curl3);
+				$myjson3  = json_decode($data3 , false );
+				
+				$detail_fields = $myjson3->fields;
+				$detail_id = $myjson3->{'id'};
+				$detail_title = $detail_fields->{'System.Title'};
+				$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
+				$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
+				$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
+				$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
+				$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
+				$detail_WebsiteType = 	isset( $detail_fields->{'Custom.WebsiteType'} ) ? $detail_fields->{'Custom.WebsiteType'} : '' ;
+				$detail_ImpactedAudience = isset( $detail_fields->{'Custom.ImpactedAudience'}) ? $detail_fields->{'Custom.ImpactedAudience'} : '' ;
+				$detail_WebsiteAreas = isset($detail_fields->{'Custom.WebsiteAreas'}) ? $detail_fields->{'Custom.WebsiteAreas'} : '' ;
+				$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
+				$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
+				$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
+				if ( $w_z == 0) {
+					//$sprint_goal = '<font size="2">' . $detail_title . '</font>';
+					$sprint_goal =  $detail_title ;
+				} else {
+					print "<i>" . $detail_id . "</i> - ";
+					print $detail_title ;
+					print "<br>";
+				}
+		}	
+		print '";';
+		print "\nvar Goal_" . $x . ' = "' . $sprint_goal . '"; ';
+		print("</script>\n");
+		
+		
+		// Add Sprint to graph
+		
+		
+		// format: 2022-10-24T00:00:00Z
+		//$sprint_startDate
+		
+		print '<div class="chart-row">' . "\n"; // need 1 div at end
+		print '<div class="chart-row-item" >' . $x+1 . '</div>' . "\n";
+		
+        print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
+		
+		print '  <li class="chart-li-' . $count_word[$x] . '" >' ;
+		print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date("m/d/Y", strtotime($sprint_startDate)) . "</font>";
+		print '</li>';
+        
+		
+		// now we add the popup stuff
+		print '</ul>' ;
+
+		print "</div>"; //end for class=chart-row
+		
+	}	
+	print "</div>"; //class="chart"
+	print "</div>"; //class="container"
+	//print "</div>\n"; //class="container"
+	
+	
+print'
+<script type="text/javascript" charset="utf8" src="/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js"></script>';
+
+	return;
+
+		
+//	$content = ob_get_contents();
+//	ob_end_clean();
+ //   return $content;
+}
 add_shortcode ('wp_devops_wiql','wp_devops_wiql');
+add_shortcode ('wp_devops_current_sprint','wp_devops_current_sprint');
 ?>
