@@ -532,7 +532,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 		
         print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
 		
-		print '  <li class="chart-li-' . $count_word[$x] . '" >' ;
+		print '  <li class="chart-li-' . $count_word[$x] . ' chart-li" >' ;
 		print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date("m/d/Y", strtotime($sprint_startDate)) . "</font>";
 		print '</li>';
         
