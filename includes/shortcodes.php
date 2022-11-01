@@ -236,7 +236,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$tablid = sanitize_text_field($atts['record']); 
 	ob_start(); // this allows me to use echo instead of using concat all strings
 	
-	print '<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 
 //	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css';
