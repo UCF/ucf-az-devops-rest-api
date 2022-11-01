@@ -468,7 +468,7 @@ li.extra {
 		else
 			$graph_start = $month_to_show;
 		// next up is to figure out month length
-		$graph_len = (($yr_end - $yr_str) * 12) + ($mon_end - $mon_str) + $graph_start;
+		$graph_len = (($yr_end - $yr_str) * 12) + ($mon_end - $mon_str); // + $graph_start;
 		if($graph_len > $month_to_show)
 			$graph_len = $month_to_show;
 		
