@@ -331,9 +331,9 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$sizeof = count($List);
 	
 	$cur_yr = date('Y');
-	$cur_month = date('m') - 2;
-	if ($cur_month < 0) {
-		$cur_month = $cur_month + 12;
+	$cur_mon = date('m') - 2;
+	if ($cur_mon < 0) {
+		$cur_mon = $cur_mon + 12;
 		$cur_yr = $cur_yr - 1;
 	}
 	
@@ -459,10 +459,10 @@ li.extra {
 			$cur_endyr = $cur_endyr + 1;
 		}
 		// so the first thing is to find out is about start date
-		if(($yr_str == $cur_yr)&&($mon_str < $cur_month))
+		if(($yr_str == $cur_yr)&&($mon_str < $cur_mon))
 			$graph_start = 1; // starts before so.....
-		else if (($yr_str == $cur_yr) && ($mon_str >= $cur_month))
-			$graph_start = $mon_str - $cur_month;
+		else if (($yr_str == $cur_yr) && ($mon_str >= $cur_mon))
+			$graph_start = $mon_str - $cur_mon;
 		else if (($yr_str == $cur_endyr)&& ($mon_str <= $cur_endmon))
 			$graph_start = $mon_str - $cur_month + 12;
 		else

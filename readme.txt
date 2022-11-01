@@ -7,8 +7,8 @@ Author: Bradley Smith
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 5.7
-Stable tag: 2.73
-Version: 2.73
+Stable tag: 2.74
+Version: 2.74
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
