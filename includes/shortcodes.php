@@ -476,7 +476,7 @@ li.extra {
 			$graph_start = 1;
 		print "/* -- Debugging:\ncur_mon/cur_yr: " . $cur_mon . "/" . $cur_yr . "\n";
 		print "cur_endmon/cur_endyr: " . $cur_endmon . "/" . $cur_endyr . "\n";
-		print "graph_start/graph_end: " . $graph_start . "/" . $graph_end . "\n";
+		print "graph_start/graph_len: " . $graph_start . "/" . $graph_len . "\n";
 		print "mon_str/yr_str: " . $mon_str . "/" . $yr_str . "\n";
 		print "mon_end/yr_end: " . $mon_end . "/" . $yr_end . "\n";
 		print "*/\n";
