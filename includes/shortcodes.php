@@ -597,7 +597,7 @@ li.extra {
 					$sprint_goal =  $detail_title ;
 				} else {
 					// this does the summary
-					$sprint_text = $sprint_text . "<div onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
+					$sprint_text = $sprint_text . "<div style=\\\"cursor: crosshair\\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
 					$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
 					$sprint_text = $sprint_text . $detail_title ;
 					
