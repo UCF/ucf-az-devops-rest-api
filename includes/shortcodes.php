@@ -331,13 +331,13 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$sizeof = count($List);
 	
 	$cur_yr = date('Y');
-	$cur_mon = date('m') - 2;
+	$cur_mon = date('m') - 1;
 	if ($cur_mon < 0) {
 		$cur_mon = $cur_mon + 12;
 		$cur_yr = $cur_yr - 1;
 	}
 	
-	$loop_month = $cur_mon;
+	$loop_month = $cur_mon -1 ;
 	$done=1;
 	$month_to_show = 12;
 	
@@ -459,21 +459,34 @@ li.extra {
 			$cur_endyr = $cur_endyr + 1;
 		}
 		// so the first thing is to find out is about start date
-		if(($yr_str == $cur_yr)&&($mon_str < $cur_mon))
-			$graph_start = 1; // starts before so.....
-		else if (($yr_str == $cur_yr) && ($mon_str >= $cur_mon))
+		if (($yr_str == $cur_yr))
 			$graph_start = $mon_str - $cur_mon;
-		else if (($yr_str == $cur_endyr)&& ($mon_str <= $cur_endmon))
-			$graph_start = $mon_str - $cur_month + 12;
 		else
-			$graph_start = $month_to_show;
+			$graph_start = $mon_str - $cur_mon + 12;
+
+		print "/* -- Debugging:sprint_name: " . $sprint_name . " */\n";
+		
+		print "/* -- Debugging:graph_start: " . $graph_start . " */\n";
+
 		// next up is to figure out month length
-		$graph_len = (($yr_end - $yr_str) * 12) + ($mon_end - $mon_str); // + $graph_start;
+		$graph_len = (($yr_end - $yr_str) * 12) + ($mon_end - $mon_str) +1; // + $graph_start;
 		if($graph_len > $month_to_show)
 			$graph_len = $month_to_show;
 		
-		if($graph_start < 1)
+		print "/* -- Debugging:\graph_len: " . $graph_len . " */\n";
+		
+		if($graph_start < 1) { //* need to adjust len b/c starts before our graph
+			$graph_len = $graph_len + $graph_start;
 			$graph_start = 1;
+		} else
+			$graph_start = $graph_start + 1; /* this is b/c we start 1 month from cur */
+		
+		//The grid-column property specifies a grid item's size and location in a grid layout, and is a shorthand property for the following properties:
+		//grid-column-start
+		// grid-column-end
+		
+		$graph_len = $graph_len + $graph_start;
+		
 		print "/* -- Debugging:\ncur_mon/cur_yr: " . $cur_mon . "/" . $cur_yr . "\n";
 		print "cur_endmon/cur_endyr: " . $cur_endmon . "/" . $cur_endyr . "\n";
 		print "graph_start/graph_len: " . $graph_start . "/" . $graph_len . "\n";
@@ -484,7 +497,7 @@ li.extra {
 		// graph_start = start column
 		// graph_end = how man columns to span
 		print 'ul .chart-li-' . $count_word[$x] . ' { ' . "\n" .
-			'grid-column: '. $graph_start . '/' . ($graph_len+1) . ';' . "\n" .
+			'grid-column: '. $graph_start . '/' . ($graph_len) . ';' . "\n" .
 			'background-color:#588BAE;  }';
 		print "\n";
 	}	
