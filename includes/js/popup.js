@@ -9,7 +9,7 @@ var pop = {
     pop.pWrap.id = "popwrap";
     document.body.appendChild(pop.pWrap);
 
-    // (A2) POPUP INNERHTML
+    // (A2) POPUP INNERHTML - only return if header is clicked
     pop.pWrap.innerHTML =
     `<div id="popbox" >
       <h1 id="poptitle" onclick="pop.close()" ></h1>
