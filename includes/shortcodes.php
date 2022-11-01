@@ -31,7 +31,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
-	$tableid = "table_1";
+	//$tableid = "table_1";
 	
 	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization); //"UCF-Operations";  // this is the organization name from Azure DevOps - needs to be html escaped
 	$Project = str_replace(" ", "%20", $wp_devops_setup->project); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
@@ -82,12 +82,20 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$sizeof = count($workitems);
 	//
 
+	$count_pipe = 0;
 	//echo "sizeof:" . $sizeof;
 	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
+	print '<th style="width: 1%;" >&nbsp;</th>';
 	for($x = 0; $x < $FieldArraySize; $x++) {
-		print "            <th style=\"". $FieldStyle[$x] . "\" >" . $HeaderFields[$x] . "</th>\n";
+		if ($HeaderFields[$x][0] != "|" ) {
+			// if the first field is a vertical bar we will skip it for now b/c it will be handled later
+			print "            <th style=\"". $FieldStyle[$x] . "\" >" . $HeaderFields[$x] . "</th>\n";
+		} else {
+			$col_span = 1;
+			$count_pipe = $count_pipe + 1;
+		}
 	}
 	print "        </tr>\n";
 	print "    </thead>\n";
@@ -112,13 +120,29 @@ function wp_devops_wiql($atts = [], $content = null) {
 		curl_close($curl_workitem);
 		
 		$item_json  = json_decode($item_data , false );
-		print '<tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
+		if ( $x == ($sizeof -1))  {// last row need top and bottom line
+			print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
+			print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
+		} else {
+			print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
+			print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
+		}
+		
+		// style="background-color:#FFC409; border-bottom: 1px solid black;"
 	
 		for($y = 0; $y < $FieldArraySize; $y++) {
+			$do_col_span = 0;
 			if (strtolower($FieldsToQuery[$y]) == "id") {
 				// special case for id of the issue
 				$CellValue = $item_json->{'id'};
 			} else {
+				if ($FieldsToQuery[$y][0] == "|") { 
+					$do_col_span = $do_col_span + 1;
+					print "</tr>\n<tr >";
+					print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
+					print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
+						substr($HeaderFields[$y], 1) . ':&nbsp</B>';
+				}
 				// okay at this point we will check to see if we have a question mark
 				// if we do we will take the first field and if there is something there
 				// we will use it, if not we will print the second field regardless of what
@@ -161,10 +185,15 @@ function wp_devops_wiql($atts = [], $content = null) {
 						$CellValue = substr($CellValue, 0, 10);
 				}	
 			}
-			print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+			if ($do_col_span > 0) {
+				print $CellValue . "</td>";
+				for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
+						print '<td style="display: none"></td>';
+				}
+			}else
+				print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 		}
 		print "</tr>\n";
-		print "\n\n";
 	}
 	print "    </tbody>\n";
 	print "</table>\n";
@@ -207,7 +236,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$tablid = sanitize_text_field($atts['record']); 
 	ob_start(); // this allows me to use echo instead of using concat all strings
 	
-	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	print '<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 
 //	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css';
@@ -515,13 +544,17 @@ li.extra {
 		$sizeof2 = count($worklistitems);
 		
 		print("<script>\n");
-		print "var Text_" . $x . " = \"";
+		
 		$sprint_goal = "";
+		$sprint_text = "";
+		
 		for ( $w_z = 0; $w_z < $sizeof2 ; $w_z++) {
 				$w_target = $worklistitems[$w_z]->{'target'};
 				$w_id = $w_target->id;
 				$w_url = $w_target->url;	
-							#
+				
+				$sprint_detail = "";
+				
 				# next up go and get the information for each workitem
 				$url3 = $w_url;
 				$curl3 = curl_init();
@@ -536,6 +569,18 @@ li.extra {
 				$detail_fields = $myjson3->fields;
 				$detail_id = $myjson3->{'id'};
 				$detail_title = $detail_fields->{'System.Title'};
+				if (isset($detail_fields ->{'System.AssignedTo'})) {
+					// have an assignee
+					$stdClass_object = $detail_fields ->{'System.AssignedTo'};
+					$detail_assignee = $stdClass_object ->{'displayName'};
+				}else {
+					$detail_assignee = "[Unassigned]";
+				}
+				
+				$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
+				
+				
+				$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
 				$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
 				$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
 				$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
@@ -551,11 +596,29 @@ li.extra {
 					//$sprint_goal = '<font size="2">' . $detail_title . '</font>';
 					$sprint_goal =  $detail_title ;
 				} else {
-					print "<i>" . $detail_id . "</i> - ";
-					print $detail_title ;
-					print "<br>";
+					// this does the summary
+					$sprint_text = $sprint_text . "<div onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
+					$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
+					$sprint_text = $sprint_text . $detail_title ;
+					
+					$sprint_text = $sprint_text . "<br></div>";
+					
+					// this will do the detail when the person clicks on the summary
+					//$sprint_detail = $sprint_detail . "<B>Description</B><br>" . "Detail Descr here - possible remove html coding";
+					
+					//$sprint_detail = $sprint_detail . "<B>Description</B><br>" . str_replace('"', '\"', str_replace("\n", "", $detail_descr));
+					//$sprint_detail = $sprint_detail . "<P>State: " . $detail_State . "<br>";
+					//$sprint_detail = $sprint_detail . "Estimated Completion:" . $detail_EstimatedCompletion ;
+					$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
+					$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+					print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
+					if(strlen($detail_title) > 50)
+						print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . substr($detail_title, 0, 40) . '...";' . "\n";
+					else
+						print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . $detail_title . '";' . "\n";
 				}
-		}	
+		}
+		print "var Text_" . $x . " = \"" . $sprint_text;
 		print '";';
 		print "\nvar Goal_" . $x . ' = "' . $sprint_goal . '"; ';
 		print("</script>\n");
@@ -598,6 +661,84 @@ print'
 	ob_end_clean();
     return $content;
 }
+function show_workitem($id, $title, $assignee, $comment, $description, $area, $iteration )
+{
+	//$id = "16007";
+	//$title = "INT013 PeopleFirst Payroll Deductions BNO002 - Duplicate Inputs";
+	//$description = "Quick Brown Fox";
+	//$assignee = "brad";
+	//$comment = "";
+	//$area = "area";
+	//$iteration = "iteration";
+	
+	$id = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $id)));
+	$title = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $title)));
+	//$assignee = str_replace("'", "", $assignee);
+	//$assignee = str_replace('"', '', $assignee);
+	//$assignee = str_replace("\r", "", str_replace("\n", "", $assignee));
+	$comment = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $comment)));
+	$description = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $description)));
+	$description = str_replace('\\', '', $description);
+	//$area = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $area)));
+	//$iteration = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $iteration)));
+	
+	
+	
+$return_content =  'assigneed: ' . $assignee . '<p>&nbsp;</p>
+
+<table border="0" cellpadding="1" cellspacing="1" style="width:870px">
+	<tbody>
+		<tr>
+			<td rowspan="4" style="background-color:#339933; width:31px">&nbsp;</td>
+			<td style="vertical-align:top; width:291px"><strong>Issue ' .  $id . '</strong></td>
+			<td style="text-align:right; white-space:nowrap; width:551px">
+			<table border="0" cellpadding="1" cellspacing="1" style="width:480px">
+				<tbody>
+					<tr>
+						<td style="width:66px">Area</td>
+						<td style="width:410px">' . $area . '</td>
+					</tr>
+					<tr>
+						<td style="width:66px">Iteration</td>
+						<td style="width:410px">' . $iteration . '</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3" rowspan="1" style="width:753px"><strong>' . $title . '</strong></td>
+		</tr>
+		<tr>
+			<td style="width:291px"><B>Assignee</B>:&nbsp;' .  $assignee . '</td>
+			<td colspan="2" rowspan="1" style="text-align:right; width:551px"></td>
+		</tr>
+		<tr>
+			<td colspan="2" rowspan="1" style="width:651px">
+			<table border="0" cellpadding="1" cellspacing="1" style="width:824px">
+				<tbody>
+					<tr>
+						<td style="width:814px"><B>Description</B></td>
+					</tr>
+					<tr>
+						<td style="width:814px">' .  $description . '</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<p>&nbsp;</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>&nbsp;</p>
+
+';
+
+return($return_content);
+}
+
 add_shortcode ('wp_devops_wiql','wp_devops_wiql');
 add_shortcode ('wp_devops_current_sprint','wp_devops_current_sprint');
 ?>
