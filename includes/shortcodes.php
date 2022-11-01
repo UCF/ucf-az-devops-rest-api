@@ -337,7 +337,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 		$cur_yr = $cur_yr - 1;
 	}
 	
-	$loop_month = $cur_month;
+	$loop_month = $cur_mon;
 	$done=1;
 	$month_to_show = 12;
 	
