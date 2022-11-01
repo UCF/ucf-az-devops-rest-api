@@ -452,7 +452,7 @@ li.extra {
 		
 		// so if $cur_month = start of graph 
 		// then $cur_month + 12 = end of graph
-		$cur_endmon = $cur_month + 12;
+		$cur_endmon = $cur_mon + 12;
 		$cur_endyr = $cur_yr;
 		if ( $cur_endmon > 12) {
 			$cur_endmon = $cur_endmon - 12;
