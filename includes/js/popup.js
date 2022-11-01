@@ -59,7 +59,7 @@ var detail = {
 		detail.dtext = document.getElementById("detailtext");
 		detail.dtitle = document.getElementById("detailtitle");
 	},
-	
+	 
 	open : (x, w_z) => {
 
 		detail_msg = "Detail_" + x + "_" + w_z;
