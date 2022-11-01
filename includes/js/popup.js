@@ -39,6 +39,7 @@ var pop = {
 	
 window.addEventListener("DOMContentLoaded", pop.init);
 
+/* This is used for the second popup */
 var detail = {
 	/* initialize variables */
 	detail_msg: null, 
