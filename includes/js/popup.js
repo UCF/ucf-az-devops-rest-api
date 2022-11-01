@@ -1,3 +1,4 @@
+/* first popup */
 var pop = {
   // (A) ATTACH POPUP HTML
   pWrap : null,  // html popup wrapper
