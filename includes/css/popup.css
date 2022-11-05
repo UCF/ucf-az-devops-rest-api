@@ -1,0 +1,94 @@
+/* (A) POPUP WRAPPER */
+#popwrap, #popwrap * { box-sizing: border-box; }
+#popwrap {
+  /* (A1) FULLSCREEN COVER*/
+  position: fixed;
+  top: 0; left: 0; z-index: 99;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+ 
+  /* (A2) HIDDEN BY DEFAULT */
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s;
+}
+
+/* (A3) SHOW POPUP */
+#popwrap.open {
+  opacity: 1; visibility: visible;
+ 
+}
+
+/* (B) POPUP BOX ITSELF */
+#popbox {
+  /* (B1) ABSOLUTE CENTER */
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+
+  /* (B2) DIMENSIONS */
+  min-width: 320px; max-width: 800px;
+}
+
+/* (C) TITLE + TEXT + CLOSE BUTTON  */
+#poptitle { background: #FFC409; }
+#poptext { background: #fff; }
+#poptitle, #poptext { 
+	padding: 10px; 
+	margin: 0; 
+} 
+#poptitle, #popclose { font-size: 28px; color: #000; }
+
+#popclose {
+	position: absolute; 
+	top: 5px; right: 5px; 
+	cursor: pointer;
+} 
+
+
+
+
+
+/* (A) detailUP WRAPPER */
+#detailwrap, #detailwrap * { box-sizing: border-box; }
+#detailwrap {
+  /* (A1) FULLSCREEN COVER*/
+  position: fixed;
+  top: 0; left: 0; z-index: 99;
+  /* this seems to adjust where the box lands on the screen */
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+ 
+  /* (A2) HIDDEN BY DEFAULT */
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s;
+}
+
+/* (A3) SHOW detailUP */
+#detailwrap.open {
+  opacity: 1; visibility: visible;
+ 
+}
+
+/* (B) detailUP BOX ITSELF */
+#detailbox {
+  /* (B1) ABSOLUTE CENTER */
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+
+  /* (B2) DIMENSIONS This changes the size of the detail box */
+  min-width: 320px; max-width: 1200px;
+}
+
+/* (C) TITLE + TEXT + CLOSE BUTTON  */
+#detailtitle { background: #b3e6b3; }
+#detailtext { background: #fff; }
+#detailtitle, #detailtext { 
+	padding: 10px; 
+	margin: 0; 
+} 
+#detailtitle, #detailclose { font-size: 28px; color: #fff; }
+
+#detailclose {
+	position: absolute; 
+	top: 5px; right: 5px; 
+	cursor: pointer;
+} 

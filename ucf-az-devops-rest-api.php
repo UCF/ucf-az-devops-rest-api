@@ -3,13 +3,15 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 2.20
+* Version: 2.76
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
 
 // Load all the nav menu interface functions.
 require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
+
+
 
  
 register_activation_hook( __FILE__, 'ucf_devops_rest_api' );
@@ -18,27 +20,67 @@ function ucf_devops_rest_api(){
 	global $wp;
 	
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
+	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
+	$return = $wpdb->query( $drop );
+	$wpdb->flush();
 	
-	
+	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
+	$return = $wpdb->query( $drop );
+	$wpdb->flush();
+
+
+
 	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_main (
+		wiql_index		int,
+		entry_index		int,
+		wiql			text,
+		fields_to_query	text,
+		header_fields	text,
+		field_style		text,
+		char_count		text,
+	PRIMARY KEY(wiql_index, entry_index )		
+	)";
+	dbDelta( $sql );
+	//$wpdb->show_errors();
+	$wpdb->flush();
+	
+	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_setup (
 		entry_index		int,
 		pat_token		varchar(128),	
 		pat_expire		date,
 		description		varchar(128),
 		organization	varchar(128),
 		project			varchar(128),
-		wiql			text,
-		fields_to_query	text,
-		header_fields	text,
-		field_style		text,
-		char_count		text,
 	PRIMARY KEY(entry_index)		
 	)";
 	dbDelta( $sql );
-	$wpdb->show_errors();
+	//$wpdb->show_errors();
 	$wpdb->flush();
 
 }
+
+
+function myplugin_update(){
+	global $wpdb;
+	global $wp;
+		
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	
+	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
+	print "<script>alert('" . $drop . "');</script>";
+//	dbDelta( $drop );
+//	$wpdb->flush();
+	
+	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
+	print "<script>alert('" . $drop . "');</script>";
+//	dbDelta( $drop );
+//	$wpdb->flush();
+	
+
+
+}
+add_action('upgrader_process_complete', 'myplugin_update');
 
 require_once( plugin_dir_path( __FILE__ ) . 'includes/admin_menu.php');
 
@@ -118,11 +160,28 @@ add_action( 'wp_enqueue_script', function() {
 			
 			wp_enqueue_script(
 				'ucf-charts-data-tables', // Handle
+				'https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js', // JS URL of the data tables plugin
+				array( 'jquery' ),  // Dependencies
+				'1.10.2', // Version
+				true      // Load in footer
+			);
+			
+			wp_enqueue_script(
+				'ucf-charts-data-tables', // Handle
 				'https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js', // JS URL of the data tables plugin
 				array( 'jquery' ),  // Dependencies
 				'1.10.2', // Version
 				true      // Load in footer
 			);
+
+			
+			wp_enqueue_style( 'popup-css', get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css', 
+			array( 'jquery' ), '2.0', true);	
+			
+			wp_enqueue_style( 'timelinegraph-css', get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css' , 
+			array( 'jquery' ), '2.0', true);
+				
+			wp_enqueue_script( 'popup-js', 	get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js' , false, '2.0', true);
 
 } );
 
