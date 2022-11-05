@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 2.60
+* Version: 2.74
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -160,19 +160,29 @@ add_action( 'wp_enqueue_script', function() {
 			
 			wp_enqueue_script(
 				'ucf-charts-data-tables', // Handle
-				'https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js', // JS URL of the data tables plugin
+				'https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js', // JS URL of the data tables plugin
 				array( 'jquery' ),  // Dependencies
 				'1.10.2', // Version
 				true      // Load in footer
 			);
 			
+			wp_enqueue_script(
+				'ucf-charts-data-tables', // Handle
+				'https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js', // JS URL of the data tables plugin
+				array( 'jquery' ),  // Dependencies
+				'1.10.2', // Version
+				true      // Load in footer
+			);
+
+			
 			wp_enqueue_style( 'popup-css', get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css', 
-			array( 'jquery' ), '1.0.0', true);	
+			array( 'jquery' ), '2.0', true);	
 			
 			wp_enqueue_style( 'timelinegraph-css', get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css' , 
-			array( 'jquery' ), '1.0.0', true);
+			array( 'jquery' ), '2.0', true);
 				
-			wp_enqueue_script( 'popup-js', 	get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js' ,		false, '1.0.0', true);
+			wp_enqueue_script( 'popup-js', 	get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js' , false, '2.0', true);
+
 } );
 
 ?>

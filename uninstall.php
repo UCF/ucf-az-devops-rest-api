@@ -16,6 +16,9 @@
 
 	remove_shortcode ('wp_devops_resolved');
 	remove_shortcode ('wp_devops_current_sprint');
+	remove_shortcode ('wp_devops_tab_start');
+	remove_shortcode ('wp_devops_tab_end');
+	remove_shortcode ('wp_devops_list_sprint');
 	
 	
 	
