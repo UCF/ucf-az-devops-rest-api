@@ -1,4 +1,5 @@
 <?php
+
 function wp_devops_wiql($atts = [], $content = null) {
 	global $wpdb;
 	 
