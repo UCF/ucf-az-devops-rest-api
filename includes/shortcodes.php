@@ -87,7 +87,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	curl_close($curl);
 	
 	
-	$  = json_decode($data , false );
+	$myjson  = json_decode($data , false );
 	
 	$workitems = $myjson->workItems;
 	$sizeof = count($workitems);
