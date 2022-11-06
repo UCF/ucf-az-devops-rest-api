@@ -1,11 +1,20 @@
 <?php
 
+#
+# okay this function basically does Wiql from devops based off of the settings
+# and then uses jquery datatable to show the rows.
+# output is strickly done via the wiql statement.
+#
+# one thing we need to do is to add some error handleing on the API calls which I don't have
+#
+
 function wp_devops_wiql($atts = [], $content = null) {
 	global $wpdb;
 	 
 	 
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
+	# first up is to get all the items to connect and the Wiql and fields
 	$tablid = sanitize_text_field($atts['record']);
 	$sql = "select entry_index, wiql,fields_to_query," .
 		"header_fields,field_style,char_count from " . 
@@ -27,7 +36,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$wpdb->flush();
 	}
 
-//according to Jim Barnes remove for now
+	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
 	
@@ -61,14 +70,15 @@ function wp_devops_wiql($atts = [], $content = null) {
 		
 	}	
 	
+	// This is the REST url for the Wiql API
 	$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/wiql?api-version=6.0";
 	
-	$curl = curl_init();
+	$curl = curl_init(); // we use curl to get the results - easy
 	
 	$json_string = '{ "query": '. $Wiql . ' }';
 	
 	curl_setopt($curl, CURLOPT_URL, $url);
-	curl_setopt($curl, CURLOPT_POST, TRUE);
+	curl_setopt($curl, CURLOPT_POST, TRUE);  // this is try because the curl call is a post.
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $json_string);
 	curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
 	curl_setopt($curl, CURLOPT_USERPWD, ':' . $PAT );
@@ -77,7 +87,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	curl_close($curl);
 	
 	
-	$myjson  = json_decode($data , false );
+	$  = json_decode($data , false );
 	
 	$workitems = $myjson->workItems;
 	$sizeof = count($workitems);
@@ -101,26 +111,25 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "        </tr>\n";
 	print "    </thead>\n";
 	print "    <tbody>\n";
+	// so myjson has all the id's from the query.  We will loop through all the return id's
 	for($x = 0; $x < $sizeof; $x++){
 		$workitem_id = $workitems[$x]->{'id'};
 		$workitem_url = $workitems[$x]->{'url'};
 		
+		// This gets all the data elements of the devops id that the query returned
 		$item_url = $workitem_url;
 		$curl_workitem = curl_init();
-	
 		curl_setopt($curl_workitem, CURLOPT_URL, $item_url);
 		curl_setopt($curl_workitem, CURLOPT_POST, 0);  // this is a GET
 		curl_setopt($curl_workitem, CURLOPT_USERPWD, ':' . $PAT);
 		curl_setopt($curl_workitem, CURLOPT_RETURNTRANSFER, true );
 		$item_data = curl_exec($curl_workitem);
-		
-		//print("<PRE>");
-		//print_r($item_data);
-		//print("</PRE>");
-		
+	
 		curl_close($curl_workitem);
 		
 		$item_json  = json_decode($item_data , false );
+		
+		// This does the start of each row, we want a line at the top execpt for the last row we need 2 lines, top and bottom
 		if ( $x == ($sizeof -1))  {// last row need top and bottom line
 			print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
 			print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
@@ -129,15 +138,13 @@ function wp_devops_wiql($atts = [], $content = null) {
 			print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
 		}
 		
-		// style="background-color:#FFC409; border-bottom: 1px solid black;"
-	
+		// okay so  for the returned item
 		for($y = 0; $y < $FieldArraySize; $y++) {
 			$do_col_span = 0;
 			if (strtolower($FieldsToQuery[$y]) == "id") {
-				// special case for id of the issue
-				$CellValue = $item_json->{'id'};
+				$CellValue = $item_json->{'id'}; // special case for id of the issue
 			} else {
-				if ($FieldsToQuery[$y][0] == "|") { 
+				if ($FieldsToQuery[$y][0] == "|") { // This handles the ability to have 1 field do a col_span across the whole row
 					$do_col_span = $do_col_span + 1;
 					print "</tr>\n<tr >";
 					print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
@@ -195,6 +202,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 				print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 		}
 		print "</tr>\n";
+
 	}
 	print "    </tbody>\n";
 	print "</table>\n";
@@ -206,7 +214,7 @@ print '<script type="text/javascript" charset="utf8" src="https://ajax.googleapi
 print'
 <script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>';
 
-
+// this is what is needed for the jquery datatables to work.
 print'
 	<script>
 
@@ -224,6 +232,9 @@ print'
 }
 
 
+// this shortcode/function will show a clickable ghant chart of the sprints
+// it only shows sprints that are current, ones in the past and to far in the future
+// are not shown.
 function wp_devops_current_sprint($atts = [], $content = null) {
 	
 	global $wpdb;
@@ -332,24 +343,17 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$sizeof = count($List);
 	
 
+	// This is our setup on how much we show
 	$done=1;
-	$total_width = 1400;
-	$columns_to_show = 7;
-	$days_per_column = 14;
+	$total_width = 1400; // This is the total width of the graph
+	$columns_to_show = 5; // this is number of columns to show
+	$days_per_column = 14; // days per column
 	$column_size = $total_width / $columns_to_show ;
 	$column_offset = 50;
 
+	// we do the style here b/c we have some calc'd fields also some wordpress sites (here at ucf)
+	// don't allow an include of .css on plugins, only themes
 	print "<style>
-
-mybescontainer {
-	border: 10px solid green;
-	display: block;
-	position: relative;
-	/* margin: 0; */
-    padding: 50px; */
-    /* box-sizing: border-box;     */
-  }
- 
 .chart {
 	width: ". (($columns_to_show * $column_size )+ $column_offset ) . "px;
       display: grid;
@@ -358,8 +362,6 @@ mybescontainer {
       position: relative;
       overflow: hidden;  
 	  padding: 0px;
-	  
-
   }
 .chart-row {
     display: grid;      
@@ -525,8 +527,6 @@ li.extra {
 	}	
 	print "</style>\n";
 	// Setup Start of Graph
-	//print '<div class="container">';
-//	print '<div class="mybescontainer">';
 	print '<div class="chart"> ';
 	print '<div class="chart-row chart-period">';
 	print '<div class="chart-row-item"></div>	';
@@ -548,10 +548,6 @@ li.extra {
 		$done = $done + 1;
 	}
 	print "</div>\n"; //ending for class="chart-row chart-lines"
-	
-	
-//print "</div>\n"; // temp end for chart
-//print "</div>\n"; // temp end for bescontainer
 
 	$display_row = 1;
 	for($x = 0; $x < $sizeof; $x++){
@@ -641,13 +637,7 @@ li.extra {
 				$sprint_text = $sprint_text . $detail_title ;
 				
 				$sprint_text = $sprint_text . "<br></div>";
-				
-				// this will do the detail when the person clicks on the summary
-				//$sprint_detail = $sprint_detail . "<B>Description</B><br>" . "Detail Descr here - possible remove html coding";
-				
-				//$sprint_detail = $sprint_detail . "<B>Description</B><br>" . str_replace('"', '\"', str_replace("\n", "", $detail_descr));
-				//$sprint_detail = $sprint_detail . "<P>State: " . $detail_State . "<br>";
-				//$sprint_detail = $sprint_detail . "Estimated Completion:" . $detail_EstimatedCompletion ;
+
 				$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
 				$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
 				print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
@@ -663,9 +653,7 @@ li.extra {
 		print("</script>\n");
 		
 		
-		// Add Sprint to graph
-		
-		
+		// Add Sprint to graph		
 		// format: 2022-10-24T00:00:00Z
 		//$sprint_startDate
 		$sprint_str = date_create(substr($sprint_startDate, 0, 10));
@@ -711,9 +699,7 @@ li.extra {
 		}
 	}	
 	print "</div>"; //class="chart"
-	//print "</div>"; //class="mybescontainer"
-	//print "</div>\n"; //class="container"
-	
+
 	$js_file = str_replace('\\', '/', ABSPATH) . 'wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js';
 	$js_open = fopen($js_file, "r");
 	$js_data = fread($js_open, filesize($js_file));
@@ -729,6 +715,8 @@ li.extra {
 	ob_end_clean();
     return $content;
 }
+//
+// this function is designed to show a work item data elements 
 function show_workitem($id, $title, $assignee, $comment, $description, $area, $iteration )
 {
 	//$id = "16007";
@@ -807,6 +795,9 @@ $return_content =  'assigneed: ' . $assignee . '<p>&nbsp;</p>
 return($return_content);
 }
 
+//
+// this shortcode is used to start tabs
+//
 function wp_devops_tab_start()
 {
 	print '
@@ -852,6 +843,8 @@ body {font-family: Arial;}
 </style>
 ';
 }
+//
+// this is the end of the tabs - you should put code inbetween 
 function wp_devops_tab_end()
 {
 	print '
@@ -874,6 +867,11 @@ function openDevOpsTab(evt, cityName) {
 
 }
 
+//
+// this function allows us to show the current sprint, current+1, current+2, etc
+// in a jquery datatable 
+//
+
 function wp_devops_list_sprint($atts = [], $content = null) {
 	
 	global $wpdb;
@@ -885,8 +883,8 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 	$months = array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
  
 	$sprint_to_show = sanitize_text_field($atts['sprint_number']); 
-	
 	$record = sanitize_text_field($atts['record']); /* this gets the field list */
+	
 	$sql = "select entry_index, wiql,fields_to_query," .
 		"header_fields,field_style,char_count from " . 
 		$wpdb->base_prefix . "ucf_devops_main where wiql_index = " . $record;
@@ -1072,13 +1070,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 					
 					$sprint_detail = "";
 					
-					if ( $x == ($sizeof -1))  {// last row need top and bottom line
-						print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
-						print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
-					} else {
-						print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
-						print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
-					}
+
 
 					
 					# next up go and get the information for each workitem
@@ -1107,6 +1099,10 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 					
 					
 					$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
+					
+					// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
+					$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
+					
 					$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
 					$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
 					$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
@@ -1120,72 +1116,79 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 					$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
 					$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
 					
-					
-					
-					for($y = 0; $y < $FieldArraySize; $y++) {
-						$do_col_span = 0;
-						if (strtolower($FieldsToQuery[$y]) == "id") {
-							// special case for id of the issue
-							$CellValue = $detail_id;
+					if ( $detail_ShowOnWebsite == '1') { // this is our flag to only show those items that are flagged.
+						if ( $x == ($sizeof -1))  {// last row need top and bottom line
+							print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
+							print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
 						} else {
-							if ($FieldsToQuery[$y][0] == "|") { 
-								$do_col_span = $do_col_span + 1;
-								print "</tr>\n<tr >";
-								print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
-								print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
-									substr($HeaderFields[$y], 1) . ':&nbsp</B>';
-							}
-							// okay at this point we will check to see if we have a question mark
-							// if we do we will take the first field and if there is something there
-							// we will use it, if not we will print the second field regardless of what
-							// is there
-							$has_question_mark = strpos($FieldsToQuery[$y], "?");
-							if ($has_question_mark == FALSE) {
-								# no question mark 
-								$CellValue = (isset($myjson3->{'fields'}->{$FieldsToQuery[$y]}) ? 
-									$myjson3->{'fields'}->{$FieldsToQuery[$y]} : false);
-								// need to check for priority Microsoft.VSTS.Common.Priority
-								if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
-									switch($CellValue) {
-										case "1":
-											$CellValue = "Critical";
-											break;
-										case "2":
-											$CellValue = "High";
-											break;
-										case "3":
-											$CellValue = "Med";
-											break;
-										case "4":
-											$CellValue = "Low";
-											break;
-									}
-								}
-								if ($CharCount[$y] > 0) 
-									$CellValue = substr($CellValue, 0, 10);
-							} else {
-								$condit_array = explode("?",$FieldsToQuery[$y]);
-								$condit_array[0] = trim($condit_array[0]);
-								$condit_array[1] = trim($condit_array[1]);
-								$CellValue = (isset($myjson3->{'fields'}->{$condit_array[0]}) ? 
-									$myjson3->{'fields'}->{$condit_array[0]} : false);
-								if ($CellValue == FALSE) {
-									$CellValue = (isset($myjson3->{'fields'}->{$condit_array[1]}) ? 
-									$myjson3->{'fields'}->{$condit_array[1]} : false);
-								}
-								if ($CharCount[$y] > 0) 
-									$CellValue = substr($CellValue, 0, 10);
-							}	
+							print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
+							print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
 						}
-						if ($do_col_span > 0) {
-							print $CellValue . "</td>";
-							for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
-									print '<td style="display: none"></td>';
+						for($y = 0; $y < $FieldArraySize; $y++) {
+							$do_col_span = 0;
+							if (strtolower($FieldsToQuery[$y]) == "id") {
+								// special case for id of the issue
+								$CellValue = $detail_id;
+							} else {
+								if ($FieldsToQuery[$y][0] == "|") { 
+									$do_col_span = $do_col_span + 1;
+									print "</tr>\n<tr >";
+									print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
+									print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
+										substr($HeaderFields[$y], 1) . ':&nbsp</B>';
+								}
+								// okay at this point we will check to see if we have a question mark
+								// if we do we will take the first field and if there is something there
+								// we will use it, if not we will print the second field regardless of what
+								// is there
+								$has_question_mark = strpos($FieldsToQuery[$y], "?");
+								if ($has_question_mark == FALSE) {
+									# no question mark 
+									$CellValue = (isset($myjson3->{'fields'}->{$FieldsToQuery[$y]}) ? 
+										$myjson3->{'fields'}->{$FieldsToQuery[$y]} : false);
+									// need to check for priority Microsoft.VSTS.Common.Priority
+									if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
+										switch($CellValue) {
+											case "1":
+												$CellValue = "Critical";
+												break;
+											case "2":
+												$CellValue = "High";
+												break;
+											case "3":
+												$CellValue = "Med";
+												break;
+											case "4":
+												$CellValue = "Low";
+												break;
+										}
+									}
+									if ($CharCount[$y] > 0) 
+										$CellValue = substr($CellValue, 0, 10);
+								} else {
+									$condit_array = explode("?",$FieldsToQuery[$y]);
+									$condit_array[0] = trim($condit_array[0]);
+									$condit_array[1] = trim($condit_array[1]);
+									$CellValue = (isset($myjson3->{'fields'}->{$condit_array[0]}) ? 
+										$myjson3->{'fields'}->{$condit_array[0]} : false);
+									if ($CellValue == FALSE) {
+										$CellValue = (isset($myjson3->{'fields'}->{$condit_array[1]}) ? 
+										$myjson3->{'fields'}->{$condit_array[1]} : false);
+									}
+									if ($CharCount[$y] > 0) 
+										$CellValue = substr($CellValue, 0, 10);
+								}	
 							}
-						}else
-							print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+							if ($do_col_span > 0) {
+								print $CellValue . "</td>";
+								for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
+										print '<td style="display: none"></td>';
+								}
+							}else
+								print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+						}
+						print "</tr>\n";
 					}
-					print "</tr>\n";
 		
 				}
 				$x = $sizeof;
@@ -1204,6 +1207,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
     $( window ).on( "load", function() {
         console.log( "window loaded" );	
 		document.getElementById("tab1").style.display = "block";
+		evt.currentTarget.className += " active";
     });
 
 (function() {
