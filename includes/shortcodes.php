@@ -617,7 +617,8 @@ li.extra {
 				
 				$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
 				
-				
+				// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
+				$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
 				$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
 				$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
 				$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
@@ -632,20 +633,21 @@ li.extra {
 				$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
 
 				// this does the summary
-				$sprint_text = $sprint_text . "<div style=\\\"cursor: pointer; \\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
-				$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
-				$sprint_text = $sprint_text . $detail_title ;
-				
-				$sprint_text = $sprint_text . "<br></div>";
-
-				$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
-				$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-				print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
-				if(strlen($detail_title) > 50)
-					print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . substr($detail_title, 0, 40) . '...";' . "\n";
-				else
-					print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . $detail_title . '";' . "\n";
-
+				if( $detail_ShowOnWebsite == '1') {
+					$sprint_text = $sprint_text . "<div style=\\\"cursor: pointer; \\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
+					$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
+					$sprint_text = $sprint_text . $detail_title ;
+					
+					$sprint_text = $sprint_text . "<br></div>";
+	
+					$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
+					$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+					print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
+					if(strlen($detail_title) > 50)
+						print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . substr($detail_title, 0, 40) . '...";' . "\n";
+					else
+						print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . $detail_title . '";' . "\n";
+				}
 		}
 		print "var Text_" . $x . " = \"" . $sprint_text;
 		print '";';
