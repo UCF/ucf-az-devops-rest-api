@@ -345,26 +345,34 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 
 	// This is our setup on how much we show
 	$done=1;
-	$total_width = 1400; // This is the total width of the graph
-	$columns_to_show = 5; // this is number of columns to show
-	$days_per_column = 14; // days per column
+	$colwidth = 130;
+	//$total_width = 1400; // This is the total width of the graph
+	$columns_to_show = 8; // this is number of columns to show
+	$days_per_column = 7; // days per column
+	$total_width = $colwidth * $columns_to_show;
 	$column_size = $total_width / $columns_to_show ;
 	$column_offset = 50;
 
 	// we do the style here b/c we have some calc'd fields also some wordpress sites (here at ucf)
 	// don't allow an include of .css on plugins, only themes
 	print "<style>
+ .container {
+      max-width: " . $total_width . "px;
+      min-width: 400px;
+      margin: 0 0;
+      padding: 0px;      
+  }
 .chart {
 	width: ". (($columns_to_show * $column_size )+ $column_offset ) . "px;
-      display: grid;
-      /* border: 2px solid #000; */
-	  border: 2px solid #000;;
-      position: relative;
-      overflow: hidden;  
-	  padding: 0px;
+    display: grid;
+    /* border: 2px solid #000; */
+	border: 2px solid #000;;
+    position:  relative;
+    overflow: hidden;   /* */
+	padding: 0px;
   }
 .chart-row {
-    display: grid;      
+    display: grid;   
     grid-template-columns: 50px 1fr;
     background-color: #DCDCDC;
   }
@@ -376,13 +384,14 @@ function wp_devops_current_sprint($atts = [], $content = null) {
   }
 .chart-lines {
     position: absolute;
-    height: 100%;
-    width: 100%;
+    height: 100%; 
+    width: 100%; /* -- removed to help keep blocks same size? */
     background-color: transparent;
     grid-template-columns: 50px repeat(" . $columns_to_show . "," . $column_size . "px); /* was 1fr */
   }
 .chart-lines > span {  
 	display: block;  border-right: 1px solid rgba(0, 0, 0, 0.3);
+	resize: none;
 }
 .chart-row-item {
     background-color:#808080;
@@ -426,7 +435,7 @@ li.extra {
 	print "/* -- Debugging:cur_day_str(initially): " . date_format($cur_day_str,"Y/m/d H:i:s") . " --- monday value: " . $monday . " */\n";
 	date_sub($cur_day_str, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
 	
-	$week_add = ($columns_to_show *2). " weeks";  // columns * 2 (because each column represents 2 weeks 
+	$week_add = ($columns_to_show * $days_per_column). " days";  // columns * 2 (because each column represents 2 weeks 
 	print "/* -- Debugging: weeks to add: " . $week_add . " */\n";
 	$weeks = date_interval_create_from_date_string( $week_add) ;
 	$end_day = date_create( date("Y-m-d"));
@@ -456,6 +465,8 @@ li.extra {
 
 		$cur_day_end = clone $cur_day_str;
 		date_add($cur_day_end,date_interval_create_from_date_string("13 days"));
+		
+		$to_old_to_show = 0;
 
 		print "/* -- Debugging:sprint_name: " . $sprint_name . " */\n";
 		print "/* -- Debugging:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
@@ -465,79 +476,60 @@ li.extra {
 		print "/* -- Debugging: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
 		print "/* -- Debugging: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
 		
-		// next we need to find out which column this start date falls into
-		$diff_start = date_diff($cur_day_str, $sprint_str); // subtract ghant startdate minus sprint start date
-		$diff_day = $diff_start->format("%R%a");
-		print "/* -- Debugging: diff_day: " . $diff_day . " */ \n";
-		//
-		// find which column the sprint starts on
-		if($diff_day < 0) {	// okay so this sprint started before our cur_day_str (which is 1 week ago)
-			$diff_start2 = date_diff($cur_day_end, $sprint_str); 
-			$diff_day2 = $diff_start2->format("%R%a");
-			if ($diff_day2 < 0) {
-				// okay so this sprint is to old to show
-				print "/* -- Debugging: sprint to old to show */ \n";
-			}				
+		$diff_str = date_diff($cur_day_str, $sprint_str);
+		$diff_strday = $diff_str->format("%R%a");
+		print "/* -- Debugging:diff_strday: " . $diff_strday . " */ \n";
+		$graph_start = intdiv($diff_strday ,$days_per_column );
+		print "/* -- Debugging:graph_start: " . $graph_start . " */ \n";
+		if ($graph_start <= 0) {
 			$graph_start = 1;
-			print "/* -- Debugging: graph_start: " . $graph_start . " */ \n";
-		}else {
-			// okay so we now have the number of weeks this starts - so if we find which 2 week it will show
-			$graph_len = intdiv($diff_day , 14);
-			print "/* -- Debugging: graph_start (%14): " . $graph_len . " */ \n";
-			if ($graph_len > $columns_to_show) {
-				$graph_start = $columns_to_show;
-				print "/* -- Debugging: graph_start = columns_to_show: " . $graph_start . " */ \n";
-			} else {
-				$graph_start = 1 + $graph_len;
-				print "/* -- Debugging: graph_start: " . $graph_start . " */ \n";
-			}
-		}
-
-		// find which column the sprint ends on
-		$diff_end = date_diff($end_day, $sprint_end );
-		$diff_endday = $diff_end->format("%R%a");
-		print "/* -- Debugging:diff_endday: " . $diff_endday . " */ \n";
-		if($diff_endday < 0) {
-			// it's negative - check $sprint_str with 
-			$diff_end = date_diff($end_day, $sprint_str );
-			print "/* -- Debugging:using sprint_str - diff_endday: " . $diff_end . " */ \n";
-			$diff_endday = $diff_end->format("%R%a");
-			if ($diff_end < 0) {
-				$graph_end = $graph_start; // this will just make start and stop the same
-				print "/* -- Debugging Setting graph_end to graph_start " . $graph_end  . " */\n";
-			} else {
-				// so end date of sprint is between the start of the ghant and end
-				$graph_end = $diff_end % 14;
-				print "/* -- Debugging Setting graph_end to graph_end = diff_endday % 14" . $graph_end  . " */\n";
-			}
-		} else {			
-			$graph_end = $columns_to_show;
-			print "/* -- Debugging Setting graph_end to columns to show" . $graph_end  . " */\n";
+			print "/* -- Debugging:graph_start: setting to 1 */ \n";
+		} else {
+			print "/* -- Debugging:graph_start: adding 1 to it */ \n";
+			$graph_start = $graph_start +1 ;
 		}
 		
+		$diff_end = date_diff($cur_day_str, $sprint_end);
+		$diff_endday = $diff_end->format("%R%a");
+		print "/* -- Debugging:diff_endday: " . $diff_endday . " */ \n";
+		$graph_end = intdiv($diff_endday ,$days_per_column );
+		print "/* -- Debugging:graph_end: " . $graph_end . " */ \n";
+		if ($graph_end == 0)
+				$graph_end = $graph_start;
+		else if ($graph_end > 0) 
+			$graph_end = $graph_start + 2; // past?
+		
+	
+		print "/* -- Debugging:final graph_start: " . $graph_start . " */ \n";
+		print "/* -- Debugging:final graph_end: " . $graph_end . " */ \n";
 		//The grid-column property specifies a grid item's size and location in a grid layout, and is a shorthand property for the following properties:
 		//grid-column-start
 		// grid-column-end
 	
 		// graph_start = start column
 		// graph_end = how man columns to span
+		//	'left: ' . (($graph_start * $column_size )+ $column_offset ) . 'px;' . "\n" .
+		//	'position: absolute;' . "\n" .
 		print 'ul .chart-li-' . $count_word[$x] . ' { ' . "\n" .
 			'grid-column: '. $graph_start . '/' . ($graph_end) . ';' . "\n" .
+
 			'background-color:#588BAE;  }';
 		print "\n";
 	}	
 	print "</style>\n";
 	// Setup Start of Graph
+	print '<div class="container "> ';
 	print '<div class="chart"> ';
 	print '<div class="chart-row chart-period">';
 	print '<div class="chart-row-item"></div>	';
 	$done = 1;
-	$ghant_start_date = $cur_day_str;
+	$ghant_start_date =  clone $cur_day_str;
 	while($done <= $columns_to_show) {
 		$ghant_end_date = clone $ghant_start_date;
-		date_add($ghant_end_date,date_interval_create_from_date_string("13 days"));
-		print("<span><center>" . date_format($ghant_start_date,"Y/m/d") . "<br>" . date_format($ghant_end_date,"Y/m/d") . "</center></span>" );
-		date_add ( $ghant_start_date , date_interval_create_from_date_string("14 days"));	
+		date_add($ghant_end_date,date_interval_create_from_date_string( ($days_per_column-1) . " days"));
+		//old date range show //. "<br>" . date_format($ghant_end_date,"Y/m/d") 
+		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"Y/m/d") . "</center></span>" );
+		date_add ( $ghant_start_date , date_interval_create_from_date_string( $days_per_column . " days"));	
 		$done = $done + 1;
 	}
 	print "</div>\n"; // ending class="chart-row chart-period"
@@ -562,147 +554,159 @@ li.extra {
 		$sprint_finishDate = $sprint_attrib->{'finishDate'};
 		$sprint_timeFrame = $sprint_attrib->{'timeFrame'};
 		
-	
-		$sprint_url = $List[$x]->{'url'};
-		# For each sprint/iterations, we will get all the items
-		$url2 = "https://dev.azure.com/" . $Organization . "/" . $Project . "/" . $team_id . "/_apis/work/teamsettings/iterations/" . $sprint_id . "/workitems?api-version=6.0-preview.1";
-		
-		$curl2 = curl_init();
-		curl_setopt($curl2, CURLOPT_URL, $url2);
-		curl_setopt($curl2, CURLOPT_POST, FALSE);
-		curl_setopt($curl2, CURLOPT_USERPWD, ':' . $PAT );
-		curl_setopt($curl2, CURLOPT_RETURNTRANSFER, true );
-		$data2 = curl_exec($curl2);
-		curl_close($curl2);
-		$myjson2  = json_decode($data2 , false );
-		
-		//print("should show all iteractions\n");
-		//print_r($myjson2);
-		
-		$worklistitems = $myjson2->workItemRelations;
-		$sizeof2 = count($worklistitems);
-		
-		print("<script>\n");
-		
-		$sprint_goal = $sprint_name;
-		$sprint_text = "";
-		
-		for ( $w_z = 0; $w_z < $sizeof2 ; $w_z++) {
-				$w_target = $worklistitems[$w_z]->{'target'};
-				$w_id = $w_target->id;
-				$w_url = $w_target->url;	
-				
-				$sprint_detail = "";
-				
-				# next up go and get the information for each workitem
-				$url3 = $w_url;
-				$curl3 = curl_init();
-				curl_setopt($curl3, CURLOPT_URL, $url3);
-				curl_setopt($curl3, CURLOPT_POST, FALSE);
-				curl_setopt($curl3, CURLOPT_USERPWD, ':' . $PAT );
-				curl_setopt($curl3, CURLOPT_RETURNTRANSFER, true );
-				$data3 = curl_exec($curl3);
-				curl_close($curl3);
-				$myjson3  = json_decode($data3 , false );
-				
-				$detail_fields = $myjson3->fields;
-				$detail_id = $myjson3->{'id'};
-				$detail_title = $detail_fields->{'System.Title'};
-				if (isset($detail_fields ->{'System.AssignedTo'})) {
-					// have an assignee
-					$stdClass_object = $detail_fields ->{'System.AssignedTo'};
-					$detail_assignee = $stdClass_object ->{'displayName'};
-				}else {
-					$detail_assignee = "[Unassigned]";
-				}
-				
-				$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
-				
-				// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
-				$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
-				$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
-				$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
-				$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
-				$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
-				$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
-				$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
-				$detail_WebsiteType = 	isset( $detail_fields->{'Custom.WebsiteType'} ) ? $detail_fields->{'Custom.WebsiteType'} : '' ;
-				$detail_ImpactedAudience = isset( $detail_fields->{'Custom.ImpactedAudience'}) ? $detail_fields->{'Custom.ImpactedAudience'} : '' ;
-				$detail_WebsiteAreas = isset($detail_fields->{'Custom.WebsiteAreas'}) ? $detail_fields->{'Custom.WebsiteAreas'} : '' ;
-				$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
-				$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
-				$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
-
-				// this does the summary
-				if( $detail_ShowOnWebsite == '1') {
-					$sprint_text = $sprint_text . "<div style=\\\"cursor: pointer; \\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
-					$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
-					$sprint_text = $sprint_text . $detail_title ;
-					
-					$sprint_text = $sprint_text . "<br></div>";
-	
-					$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
-					$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-					print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
-					if(strlen($detail_title) > 50)
-						print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . substr($detail_title, 0, 40) . '...";' . "\n";
-					else
-						print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . $detail_title . '";' . "\n";
-				}
-		}
-		print "var Text_" . $x . " = \"" . $sprint_text;
-		print '";';
-		print "\nvar Goal_" . $x . ' = "' . $sprint_goal . '"; ';
-		print("</script>\n");
-		
-		
-		// Add Sprint to graph		
-		// format: 2022-10-24T00:00:00Z
-		//$sprint_startDate
 		$sprint_str = date_create(substr($sprint_startDate, 0, 10));
 		$sprint_end = date_create(substr($sprint_finishDate, 0, 10));
 		
-		$monday = ((date('d') % 7 ) + 7) . " days";
-		$cur_day_str = date_create( date("Y-m-d"));
-		date_sub($cur_day_str, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
+		print("<script>\n");
+		print "/* -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
+		print "/* -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
+
+		print "/* -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
+		print "/* -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
+		print("</script>\n");
+		if ( ($sprint_end >= $cur_day_str) and ($sprint_str <= $end_day)) {
+			$sprint_url = $List[$x]->{'url'};
+			# For each sprint/iterations, we will get all the items
+			$url2 = "https://dev.azure.com/" . $Organization . "/" . $Project . "/" . $team_id . "/_apis/work/teamsettings/iterations/" . $sprint_id . "/workitems?api-version=6.0-preview.1";
+			
+			$curl2 = curl_init();
+			curl_setopt($curl2, CURLOPT_URL, $url2);
+			curl_setopt($curl2, CURLOPT_POST, FALSE);
+			curl_setopt($curl2, CURLOPT_USERPWD, ':' . $PAT );
+			curl_setopt($curl2, CURLOPT_RETURNTRANSFER, true );
+			$data2 = curl_exec($curl2);
+			curl_close($curl2);
+			$myjson2  = json_decode($data2 , false );
+			
+			//print("should show all iteractions\n");
+			//print_r($myjson2);
+			
+			$worklistitems = $myjson2->workItemRelations;
+			$sizeof2 = count($worklistitems);
+			
+			print("<script>\n");
+			
+			$sprint_goal = $sprint_name;
+			$sprint_text = "";
+			
+			for ( $w_z = 0; $w_z < $sizeof2 ; $w_z++) {
+					$w_target = $worklistitems[$w_z]->{'target'};
+					$w_id = $w_target->id;
+					$w_url = $w_target->url;	
+					
+					$sprint_detail = "";
+					
+					# next up go and get the information for each workitem
+					$url3 = $w_url;
+					$curl3 = curl_init();
+					curl_setopt($curl3, CURLOPT_URL, $url3);
+					curl_setopt($curl3, CURLOPT_POST, FALSE);
+					curl_setopt($curl3, CURLOPT_USERPWD, ':' . $PAT );
+					curl_setopt($curl3, CURLOPT_RETURNTRANSFER, true );
+					$data3 = curl_exec($curl3);
+					curl_close($curl3);
+					$myjson3  = json_decode($data3 , false );
+					
+					$detail_fields = $myjson3->fields;
+					$detail_id = $myjson3->{'id'};
+					$detail_title = $detail_fields->{'System.Title'};
+					if (isset($detail_fields ->{'System.AssignedTo'})) {
+						// have an assignee
+						$stdClass_object = $detail_fields ->{'System.AssignedTo'};
+						$detail_assignee = $stdClass_object ->{'displayName'};
+					}else {
+						$detail_assignee = "[Unassigned]";
+					}
+					
+					$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
+					
+					// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
+					$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
+					$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
+					$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
+					$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
+					$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
+					$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
+					$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
+					$detail_WebsiteType = 	isset( $detail_fields->{'Custom.WebsiteType'} ) ? $detail_fields->{'Custom.WebsiteType'} : '' ;
+					$detail_ImpactedAudience = isset( $detail_fields->{'Custom.ImpactedAudience'}) ? $detail_fields->{'Custom.ImpactedAudience'} : '' ;
+					$detail_WebsiteAreas = isset($detail_fields->{'Custom.WebsiteAreas'}) ? $detail_fields->{'Custom.WebsiteAreas'} : '' ;
+					$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
+					$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
+					$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
 	
-		$week_add = ($columns_to_show * 2). " weeks";  // columns * 2 (because each column represents 2 weeks 
-		$weeks = date_interval_create_from_date_string( $week_add) ;
-		$cur_day_end = date_create( date("Y-m-d"));
-		date_sub($cur_day_end, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
-		date_add($cur_day_end, $weeks);
-
-
-		print "<!-- -- Debugging2:sprint_name: " . $sprint_name . " */\n";
-		print "<!-- -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " -->\n";
-		print "<!-- -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " -->\n";
-		print "<!-- -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
-
-		print "<!-- -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " -->\n";
-		print "<!-- -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " -->\n";
+					// this does the summary
+					if( $detail_ShowOnWebsite == '1') {
+						$sprint_text = $sprint_text . "<div style=\\\"cursor: pointer; \\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
+						$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
+						$sprint_text = $sprint_text . $detail_title ;
+						
+						$sprint_text = $sprint_text . "<br></div>";
 		
-		if ( $sprint_end >= $cur_day_str) {	// if the sprint ends before we start - don't show
-			if ( $sprint_str > $cur_day_end) {
-				print "<!-- -- Debugging2: skipping -->\n";
-			} else {
-				print "<!-- -- Debugging2: Not skipping -->\n";
-				print '<div class="chart-row">' . "\n"; // need 1 div at end
-				print '<div class="chart-row-item" >' . ($display_row) . '</div>' . "\n";
-				print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
-				print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
-				print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date("m/d/Y", strtotime($sprint_startDate)) . "</font>";
-				print '</li>';
-				// now we add the popup stuff
-				print '</ul>' ;
-				print "</div>"; //end for class=chart-row
-				$display_row = $display_row + 1;
+						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
+						$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+						print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
+						if(strlen($detail_title) > 50)
+							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . substr($detail_title, 0, 40) . '...";' . "\n";
+						else
+							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . $detail_title . '";' . "\n";
+					}
 			}
-		} else {
-			print "<!-- -- Debugging2: skipping -->\n";
-		}
-	}	
-	print "</div>"; //class="chart"
+			print "var Text_" . $x . " = \"" . $sprint_text;
+			print '";';
+			print "\nvar Goal_" . $x . ' = "' . $sprint_goal . '"; ';
+			print("</script>\n");
+			
 
+			// Add Sprint to graph		
+			// format: 2022-10-24T00:00:00Z
+			//$sprint_startDate
+			$sprint_str = date_create(substr($sprint_startDate, 0, 10));
+			$sprint_end = date_create(substr($sprint_finishDate, 0, 10));
+			
+			$monday = ((date('d') % 7 ) + 7) . " days";
+			$cur_day_str = date_create( date("Y-m-d"));
+			date_sub($cur_day_str, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
+		
+			$week_add = ($columns_to_show * 2). " weeks";  // columns * 2 (because each column represents 2 weeks 
+			$weeks = date_interval_create_from_date_string( $week_add) ;
+			$cur_day_end = date_create( date("Y-m-d"));
+			date_sub($cur_day_end, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
+			date_add($cur_day_end, $weeks);
+	
+	
+			print "<!-- -- Debugging2:sprint_name: " . $sprint_name . " */\n";
+			print "<!-- -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " -->\n";
+			print "<!-- -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " -->\n";
+			print "<!-- -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
+	
+			print "<!-- -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " -->\n";
+			print "<!-- -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " -->\n";
+			
+			if ( $sprint_end >= $cur_day_str) {	// if the sprint ends before we start - don't show
+				if ( $sprint_str > $cur_day_end) {
+					print "<!-- -- Debugging2: skipping -->\n";
+				} else {
+					print "<!-- -- Debugging2: Not skipping -->\n";
+					print '<div class="chart-row">' . "\n"; // need 1 div at end
+					print '<div class="chart-row-item" >' . ($display_row) . '</div>' . "\n";
+					print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
+					print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
+					print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date_format($sprint_str, "Y/m/d") . "</font>";
+					print '</li>';
+					// now we add the popup stuff
+					print '</ul>' ;
+					print "</div>"; //end for class=chart-row
+					$display_row = $display_row + 1;
+				}
+			} else {
+				print "<!-- -- Debugging2: skipping -->\n";
+			}
+		}	
+	}
+	print "</div>"; //class="chart"
+	print "</div>"; //class="container "
+	
 	$js_file = str_replace('\\', '/', ABSPATH) . 'wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js';
 	$js_open = fopen($js_file, "r");
 	$js_data = fread($js_open, filesize($js_file));
