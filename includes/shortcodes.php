@@ -500,6 +500,7 @@ li.extra {
 		if($diff_endday < 0) {
 			// it's negative - check $sprint_str with 
 			$diff_end = date_diff($end_day, $sprint_str );
+			print "/* -- Debugging:using sprint_str - diff_endday: " . $diff_endday . " */ \n";
 			$diff_endday = $diff_end->format("%R%a");
 			if ($diff_endday < 0) {
 				$graph_end = $graph_start; // this will just make start and stop the same
