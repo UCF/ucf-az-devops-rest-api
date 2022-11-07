@@ -500,14 +500,14 @@ li.extra {
 		if($diff_endday < 0) {
 			// it's negative - check $sprint_str with 
 			$diff_end = date_diff($end_day, $sprint_str );
-			print "/* -- Debugging:using sprint_str - diff_endday: " . $diff_endday . " */ \n";
+			print "/* -- Debugging:using sprint_str - diff_endday: " . $diff_end . " */ \n";
 			$diff_endday = $diff_end->format("%R%a");
-			if ($diff_endday < 0) {
+			if ($diff_end < 0) {
 				$graph_end = $graph_start; // this will just make start and stop the same
 				print "/* -- Debugging Setting graph_end to graph_start " . $graph_end  . " */\n";
 			} else {
 				// so end date of sprint is between the start of the ghant and end
-				$graph_end = $diff_endday % 14;
+				$graph_end = $diff_end % 14;
 				print "/* -- Debugging Setting graph_end to graph_end = diff_endday % 14" . $graph_end  . " */\n";
 			}
 		} else {			
