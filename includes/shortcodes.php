@@ -370,7 +370,8 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 .chart {
 	width: ". (($columns_to_show * $column_size )+ $column_offset ) . "px;
     display: grid;
-	border: 2px solid #000;;
+	border: 2px solid #000;
+	margin 0 0 0 0;  /* added by brad */
     position:  relative;
     overflow: hidden;   /* */
   }
