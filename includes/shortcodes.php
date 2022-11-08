@@ -345,7 +345,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 
 	// This is our setup on how much we show
 	$done=1;
-	$colwidth = 100;
+	$colwidth = 130;
 	//$total_width = 1400; // This is the total width of the graph
 	$columns_to_show = 8; // this is number of columns to show
 	$days_per_column = 7; // days per column
