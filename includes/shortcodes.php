@@ -351,7 +351,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$days_per_column = 7; // days per column
 	$total_width = $colwidth * $columns_to_show;
 	$column_size = $total_width / $columns_to_show ;
-	$column_offset = 50;
+	$column_offset = 20;
 
 	// we do the style here b/c we have some calc'd fields also some wordpress sites (here at ucf)
 	// don't allow an include of .css on plugins, only themes
@@ -376,7 +376,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
   }
 .chart-row {
     display: grid;   
-    grid-template-columns: 50px 1fr;
+    grid-template-columns: " . $column_offset . "px 1fr;
     background-color: #DCDCDC;
   }
 .chart-period {
