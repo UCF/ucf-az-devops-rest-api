@@ -357,14 +357,14 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	// don't allow an include of .css on plugins, only themes
 	print "<style>
 * {
-    margin: 0;
-    padding: 0;
+    margin 0 0 0 0; /* margin: 0; */
+    padding 0 0 0 0; /* padding: 0; */
     box-sizing: border-box;    
   }
 .container {
       max-width: " . $total_width . "px;
       min-width: 400px;
-      margin: 0 ; /* auto; */
+      margin: 0 0 0 0 ; /* 0 auto; */
       padding 0 0 0 0; /* padding: 50px; */
   }
 .chart {
