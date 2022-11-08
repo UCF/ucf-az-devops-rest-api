@@ -360,6 +360,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
       max-width: " . $total_width . "px;
       min-width: 400px;
 	  min-height: 400px;
+	  max-height: 800px;
       margin: 0 0 0 0;
       padding: 0 0 0 0;      
   }
