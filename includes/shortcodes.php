@@ -847,8 +847,7 @@ body {font-family: Arial;}
 /* Style the tab content */
 .tabcontent {
   display: none;
-  margin: 0; /* added by brad */
-  padding: 6px 12px; /* padding: 6px 12px; /* */
+  padding: 6px 6px; /* padding: 6px 12px; /* */
   border: 1px solid #ccc; /* */
   border-top: none;
 }
