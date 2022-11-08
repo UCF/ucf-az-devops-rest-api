@@ -365,7 +365,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
       max-width: " . $total_width . "px;
       min-width: 400px;
       margin: 0 auto;
-      padding: 50px;      
+      padding 0 0 0 0; /* padding: 50px; */
   }
 .chart {
 	width: ". (($columns_to_show * $column_size )+ $column_offset ) . "px;
