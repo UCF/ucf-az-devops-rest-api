@@ -390,7 +390,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
     height: 100%; 
     width: 100%; /* -- removed to help keep blocks same size? */
     background-color: transparent;
-    grid-template-columns: 50px repeat(" . $columns_to_show . "," . $column_size . "px); /* was 1fr */
+    grid-template-columns: " . $column_offset . "px repeat(" . $columns_to_show . "," . $column_size . "px); /* was 1fr */
   }
 .chart-lines > span {  
 	display: block;  border-right: 1px solid rgba(0, 0, 0, 0.3);
