@@ -535,7 +535,7 @@ li.extra {
 		$ghant_end_date = clone $ghant_start_date;
 		date_add($ghant_end_date,date_interval_create_from_date_string( ($days_per_column-1) . " days"));
 		//old date range show //. "<br>" . date_format($ghant_end_date,"Y/m/d") 
-		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"m/d/Y/") . "</center></span>" );
+		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"m/d/Y") . "</center></span>" );
 		date_add ( $ghant_start_date , date_interval_create_from_date_string( $days_per_column . " days"));	
 		$done = $done + 1;
 	}
