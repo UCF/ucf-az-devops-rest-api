@@ -383,7 +383,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
     color:  #fff;
     background-color:  #708090 !important;
     border-bottom: 2px solid #000; 
-    grid-template-columns: 50px repeat(" . $columns_to_show . ", " . $column_size . "px); /* was 1fr */
+    grid-template-columns: " . $column_offset . "px repeat(" . $columns_to_show . ", " . $column_size . "px); /* was 1fr */
   }
 .chart-lines {
     position: absolute;
