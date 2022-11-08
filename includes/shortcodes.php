@@ -351,43 +351,50 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$days_per_column = 7; // days per column
 	$total_width = $colwidth * $columns_to_show;
 	$column_size = $total_width / $columns_to_show ;
-	$column_offset = 50;
+	$column_offset = 20;
 
 	// we do the style here b/c we have some calc'd fields also some wordpress sites (here at ucf)
 	// don't allow an include of .css on plugins, only themes
+
+//* {
+//    margin 0 0 0 0; /* margin: 0; */
+//    padding 0 0 0 0; /* padding: 0; */
+//    box-sizing: border-box;    
+//  }
+//
 	print "<style>
- .container {
+
+.container {
       max-width: " . $total_width . "px;
       min-width: 400px;
-      margin: 0 0;
-      padding: 0px;      
+      margin: 0 0 0 0 ; /* 0 auto; */
+      padding 0 0 0 0; /* padding: 50px; */
   }
 .chart {
 	width: ". (($columns_to_show * $column_size )+ $column_offset ) . "px;
     display: grid;
-    /* border: 2px solid #000; */
-	border: 2px solid #000;;
+	border: 2px solid #000;
+	margin 0 0 0 0;  /* added by brad */
     position:  relative;
     overflow: hidden;   /* */
-	padding: 0px;
   }
 .chart-row {
     display: grid;   
-    grid-template-columns: 50px 1fr;
+    grid-template-columns: " . $column_offset . "px 1fr;
     background-color: #DCDCDC;
   }
 .chart-period {
     color:  #fff;
     background-color:  #708090 !important;
     border-bottom: 2px solid #000; 
-    grid-template-columns: 50px repeat(" . $columns_to_show . ", " . $column_size . "px); /* was 1fr */
+    grid-template-columns: " . $column_offset . "px repeat(" . $columns_to_show . ", " . $column_size . "px); /* was 1fr */
   }
 .chart-lines {
     position: absolute;
     height: 100%; 
     width: 100%; /* -- removed to help keep blocks same size? */
     background-color: transparent;
-    grid-template-columns: 50px repeat(" . $columns_to_show . "," . $column_size . "px); /* was 1fr */
+    grid-template-columns: " . $column_offset . "px repeat(" . $columns_to_show . "," . $column_size . "px); /* was 1fr */
   }
 .chart-lines > span {  
 	display: block;  border-right: 1px solid rgba(0, 0, 0, 0.3);
@@ -843,8 +850,8 @@ body {font-family: Arial;}
 /* Style the tab content */
 .tabcontent {
   display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
+  padding: 6px 6px; /* padding: 6px 12px; /* */
+  border: 1px solid #ccc; /* */
   border-top: none;
 }
 </style>
