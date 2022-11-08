@@ -355,12 +355,15 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 
 	// we do the style here b/c we have some calc'd fields also some wordpress sites (here at ucf)
 	// don't allow an include of .css on plugins, only themes
+
+//* {
+//    margin 0 0 0 0; /* margin: 0; */
+//    padding 0 0 0 0; /* padding: 0; */
+//    box-sizing: border-box;    
+//  }
+//
 	print "<style>
-* {
-    margin 0 0 0 0; /* margin: 0; */
-    padding 0 0 0 0; /* padding: 0; */
-    box-sizing: border-box;    
-  }
+
 .container {
       max-width: " . $total_width . "px;
       min-width: 400px;
