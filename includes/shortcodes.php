@@ -843,7 +843,7 @@ body {font-family: Arial;}
 /* Style the tab content */
 .tabcontent {
   display: none;
-  padding: 0px 0px; /* padding: 6px 12px; */
+  padding: 6px 12px; /* padding: 6px 12px; /* */
   border: 1px solid #ccc; /* */
   border-top: none;
 }
