@@ -359,6 +359,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 .container {
       max-width: " . $total_width . "px;
       min-width: 400px;
+	  min-height: 400px;
       margin: 0 0 0 0;
       padding: 0 0 0 0;      
   }
