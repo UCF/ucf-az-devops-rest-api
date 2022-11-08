@@ -1034,7 +1034,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 			if ( $sprint_to_show == $display_row) { 	
 
 				print "<CENTER>\n";
-				print "<table style='width: 100%;'><tr><td><B>Current Sprint ID:&nbsp;</B>" . $sprint_name . "</td><td><B>Start Date:</B>&nbsp;" . date_format($sprint_str, 'M j, Y') . 
+				print "<table style='width: 100%;'><tr><td><B>Sprint ID:&nbsp;</B>" . $sprint_name . "</td><td><B>Start Date:</B>&nbsp;" . date_format($sprint_str, 'M j, Y') . 
 					"</td><td><B>End Date:</B>&nbsp;" .  date_format($sprint_end, 'M j, Y') . "</td></tr></table>\n";
 				print "</CENTER>";
 
