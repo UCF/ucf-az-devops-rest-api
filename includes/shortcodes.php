@@ -356,22 +356,23 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	// we do the style here b/c we have some calc'd fields also some wordpress sites (here at ucf)
 	// don't allow an include of .css on plugins, only themes
 	print "<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;    
+  }
 .container {
       max-width: " . $total_width . "px;
       min-width: 400px;
-	  min-height: 400px;
-	  max-height: 800px;
-      margin: 0 0 0 0;
-      padding: 0 0 0 0;      
+      margin: 0 auto;
+      padding: 50px;      
   }
 .chart {
 	width: ". (($columns_to_show * $column_size )+ $column_offset ) . "px;
     display: grid;
-    /* border: 2px solid #000; */
 	border: 2px solid #000;;
-    position:  absolute;
+    position:  relative;
     overflow: hidden;   /* */
-	padding: 0 0 0 0;
   }
 .chart-row {
     display: grid;   
