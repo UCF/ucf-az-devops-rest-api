@@ -14,6 +14,11 @@ function wp_devops_wiql($atts = [], $content = null) {
 	 
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
+
+	// Epic array to make sure we only print an Epic once
+	$EpicArray = array();
+	
+	
 	# first up is to get all the items to connect and the Wiql and fields
 	$tablid = sanitize_text_field($atts['record']);
 	$sql = "select entry_index, wiql,fields_to_query," .
@@ -89,9 +94,24 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	$myjson  = json_decode($data , false );
 	
-	$workitems = $myjson->workItems;
+	//print "<PRE>sizeof workitems: ";
+	//print_r($myjson);
+	//print "</PRE>\n";
+	//return;
+	
+	
+	$workitems = (isset( $myjson->{'workItems'} ) ? $myjson->{'workItems'} : '') ;
+	if ($workitems == '') {
+		print "<PRE>ERROR\n";
+		print "Wiql string is:" . $Wiql . "\n";
+		print "Json return is:" ;
+		print_r($myjson);
+		print "</PRE>";
+		return;
+	}
 	$sizeof = count($workitems);
-	//
+
+	//print "<PRE>sizeof workitems: " . $sizeof . "</PRE>\n";
 
 	$count_pipe = 0;
 	//echo "sizeof:" . $sizeof;
@@ -113,8 +133,9 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "    <tbody>\n";
 	// so myjson has all the id's from the query.  We will loop through all the return id's
 	for($x = 0; $x < $sizeof; $x++){
-		$workitem_id = $workitems[$x]->{'id'};
-		$workitem_url = $workitems[$x]->{'url'};
+		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
+		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
+		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
 		
 		// This gets all the data elements of the devops id that the query returned
 		$item_url = $workitem_url;
@@ -127,82 +148,138 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 		curl_close($curl_workitem);
 		
-		$item_json  = json_decode($item_data , false );
-		
-		// This does the start of each row, we want a line at the top execpt for the last row we need 2 lines, top and bottom
-		if ( $x == ($sizeof -1))  {// last row need top and bottom line
-			print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
-			print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
-		} else {
-			print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
-			print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
-		}
-		
-		// okay so  for the returned item
-		for($y = 0; $y < $FieldArraySize; $y++) {
-			$do_col_span = 0;
-			if (strtolower($FieldsToQuery[$y]) == "id") {
-				$CellValue = $item_json->{'id'}; // special case for id of the issue
-			} else {
-				if ($FieldsToQuery[$y][0] == "|") { // This handles the ability to have 1 field do a col_span across the whole row
-					$do_col_span = $do_col_span + 1;
-					print "</tr>\n<tr >";
-					print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
-					print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
-						substr($HeaderFields[$y], 1) . ':&nbsp</B>';
-				}
-				// okay at this point we will check to see if we have a question mark
-				// if we do we will take the first field and if there is something there
-				// we will use it, if not we will print the second field regardless of what
-				// is there
-				$has_question_mark = strpos($FieldsToQuery[$y], "?");
-				if ($has_question_mark == FALSE) {
-					# no question mark 
-					$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
-						$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
-					// need to check for priority Microsoft.VSTS.Common.Priority
-					if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
-						switch($CellValue) {
-							case "1":
-								$CellValue = "Critical";
-								break;
-							case "2":
-								$CellValue = "High";
-								break;
-							case "3":
-								$CellValue = "Med";
-								break;
-							case "4":
-								$CellValue = "Low";
-								break;
-						}
-					}
-					if ($CharCount[$y] > 0) 
-						$CellValue = substr($CellValue, 0, 10);
-				} else {
-					$condit_array = explode("?",$FieldsToQuery[$y]);
-					$condit_array[0] = trim($condit_array[0]);
-					$condit_array[1] = trim($condit_array[1]);
-					$CellValue = (isset($item_json->{'fields'}->{$condit_array[0]}) ? 
-						$item_json->{'fields'}->{$condit_array[0]} : false);
-					if ($CellValue == FALSE) {
-						$CellValue = (isset($item_json->{'fields'}->{$condit_array[1]}) ? 
-						$item_json->{'fields'}->{$condit_array[1]} : false);
-					}
-					if ($CharCount[$y] > 0) 
-						$CellValue = substr($CellValue, 0, 10);
-				}	
-			}
-			if ($do_col_span > 0) {
-				print $CellValue . "</td>";
-				for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
-						print '<td style="display: none"></td>';
-				}
-			}else
-				print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
-		}
-		print "</tr>\n";
+		$item_decode  = json_decode($item_data , false );
+		$item_json = $item_decode->{'value'}[0]; // trasverse json structure
 
+		
+
+		//
+		// okay so the Wiql query will remove any issues that shouldn't be shown on the website (flag) and those that
+		// aren't attached to a sprint.  If it is tied to a sprint it isn't consided in-queue/backlog.
+		$skip_for_epic = 0;
+		//
+		// this  is to make sure that this item is not tied to a sprint
+		$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
+		print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
+		if ($IterationPath == $wp_devops_setup->project ) {
+			$skip_for_epic = 0;
+			print "<!-- debugging setting skip_for_epic to zero -->\n";
+		} else {
+			$skip_for_epic = 1;
+			print "<!-- debugging setting skip_for_epic to 1 -->\n";
+		}
+		// we will do now is to see if this issue is tied to an Epic 
+		// the array we will check is EpicArray
+		$ParentID = (isset($item_json->{'fields'}->{'System.Parent'}) ? $item_json->{'fields'}->{'System.Parent'} : false) ;
+		// so if ParentId is not false we need to grab it instead
+
+		$saveid = $workitems[$x]->{'id'};
+		if ($ParentID != false) {
+			// we have a parent id, so we need to check our EpicArry and see if it is there
+			// if it there, that means we have already shown it, and we can skip this one
+
+			$srch = array_search($ParentID, $EpicArray);
+
+			if ( $srch === FALSE ) {
+				// not found, need to get it
+				array_push($EpicArray, $ParentID);
+				$epic_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ParentID . '&$expand=all&api-version=6.0';
+				$curl_workitem = curl_init();
+				curl_setopt($curl_workitem, CURLOPT_URL, $epic_url);
+				curl_setopt($curl_workitem, CURLOPT_POST, 0);  // this is a GET
+				curl_setopt($curl_workitem, CURLOPT_USERPWD, ':' . $PAT);
+				curl_setopt($curl_workitem, CURLOPT_RETURNTRANSFER, true );
+				$item_data = curl_exec($curl_workitem);
+			
+				curl_close($curl_workitem);
+			
+				$item_decode  = json_decode($item_data , false );
+				$item_json = $item_decode->{'value'}[0]; // trasverse json structure
+				
+				// So at this point item_json should hold the new Epic
+			} else {
+				// need to skip
+				$skip_for_epic = 1;
+			}
+		}
+	
+		if($skip_for_epic == 0) {
+			// show this
+		
+			// This does the start of each row, we want a line at the top execpt for the last row we need 2 lines, top and bottom
+			if ( $x == ($sizeof -1))  {// last row need top and bottom line
+				print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
+				print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
+			} else {
+				print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
+				print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
+			}
+	
+			// okay so  for the returned item
+			for($y = 0; $y < $FieldArraySize; $y++) {
+				$do_col_span = 0;
+				if (strtolower($FieldsToQuery[$y]) == "id") {
+					$CellValue = $item_json->{'id'}; // special case for id of the issue
+				} else {
+					if ($FieldsToQuery[$y][0] == "|") { // This handles the ability to have 1 field do a col_span across the whole row
+						$do_col_span = $do_col_span + 1;
+						print "</tr>\n<tr >";
+						print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
+						print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
+							substr($HeaderFields[$y], 1) . ':&nbsp</B>';
+					}
+					// okay at this point we will check to see if we have a question mark
+					// if we do we will take the first field and if there is something there
+					// we will use it, if not we will print the second field regardless of what
+					// is there
+					$has_question_mark = strpos($FieldsToQuery[$y], "?");
+					if ($has_question_mark == FALSE) {
+						# no question mark 
+						$CellValue = (isset($item_json->{'fields'}->{$FieldsToQuery[$y]}) ? 
+							$item_json->{'fields'}->{$FieldsToQuery[$y]} : false);
+						// need to check for priority Microsoft.VSTS.Common.Priority
+						if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
+							switch($CellValue) {
+								case "1":
+									$CellValue = "Critical";
+									break;
+								case "2":
+									$CellValue = "High";
+									break;
+								case "3":
+									$CellValue = "Med";
+									break;
+								case "4":
+									$CellValue = "Low";
+									break;
+							}
+						}
+						if ($CharCount[$y] > 0) 
+							$CellValue = substr($CellValue, 0, 10);
+					} else {
+						$condit_array = explode("?",$FieldsToQuery[$y]);
+						$condit_array[0] = trim($condit_array[0]);
+						$condit_array[1] = trim($condit_array[1]);
+						$CellValue = (isset($item_json->{'fields'}->{$condit_array[0]}) ? 
+							$item_json->{'fields'}->{$condit_array[0]} : false);
+						if ($CellValue == FALSE) {
+							$CellValue = (isset($item_json->{'fields'}->{$condit_array[1]}) ? 
+							$item_json->{'fields'}->{$condit_array[1]} : false);
+						}
+						if ($CharCount[$y] > 0) 
+							$CellValue = substr($CellValue, 0, 10);
+					}	
+				}
+				if ($do_col_span > 0) {
+					print $CellValue . "</td>";
+					for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
+							print '<td style="display: none"></td>';
+					}
+				}else
+					print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+			}
+			print "</tr>\n";
+		}
 	}
 	print "    </tbody>\n";
 	print "</table>\n";
@@ -250,22 +327,12 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
 	
-
-//	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css';
-//	$css_open = fopen($css_file, "r");
-//	$css_data = fread($css_open, filesize($css_file));
-//	fclose($css_open);
-//	print "<style>" . $css_data . "</stype>";
-	
 	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css';
 	$css_open = fopen($css_file, "r");
 	$css_data = fread($css_open, filesize($css_file));
 	fclose($css_open);
 	print "<style>" . $css_data . "</stype>";
 		
-//print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/timelinegraph.css"> ';
-//print '<link rel="stylesheet" type="text/css" href="' . get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css"> ';
-	
 	
 	$sql_setup = "select entry_index,pat_token," . 
 		"description,organization,project from " . 
@@ -433,8 +500,6 @@ li.extra {
     cursor: pointer;
     border-radius: 15px;
   }
-
-
 \n";
 
 	$monday = ((date('d') % 7 ) + 7) . " days";
@@ -535,7 +600,7 @@ li.extra {
 		$ghant_end_date = clone $ghant_start_date;
 		date_add($ghant_end_date,date_interval_create_from_date_string( ($days_per_column-1) . " days"));
 		//old date range show //. "<br>" . date_format($ghant_end_date,"Y/m/d") 
-		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"m/d/Y/") . "</center></span>" );
+		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"Y/m/d") . "</center></span>" );
 		date_add ( $ghant_start_date , date_interval_create_from_date_string( $days_per_column . " days"));	
 		$done = $done + 1;
 	}
@@ -895,7 +960,9 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
 	$months = array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
- 
+ 	// Epic array to make sure we only print an Epic once
+	$EpicArray = array();
+	
 	$sprint_to_show = sanitize_text_field($atts['sprint_number']); 
 	$record = sanitize_text_field($atts['record']); /* this gets the field list */
 	
@@ -1085,10 +1152,11 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 					$sprint_detail = "";
 					
 
-
-					
+					# new url to get all info
+					$url3 = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $w_id . '&$expand=all&api-version=6.0';
 					# next up go and get the information for each workitem
-					$url3 = $w_url;
+					#$url3 = $w_url . '&$expand=all&api-version=6.0';
+										
 					$curl3 = curl_init();
 					curl_setopt($curl3, CURLOPT_URL, $url3);
 					curl_setopt($curl3, CURLOPT_POST, FALSE);
@@ -1098,110 +1166,165 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 					curl_close($curl3);
 					$myjson3  = json_decode($data3 , false );
 					
-					$detail_fields = $myjson3->fields;
-					$detail_id = $myjson3->{'id'};
-					$detail_title = $detail_fields->{'System.Title'};
-					if (isset($detail_fields ->{'System.AssignedTo'})) {
-						// have an assignee
-						$stdClass_object = $detail_fields ->{'System.AssignedTo'};
-						$detail_assignee = $stdClass_object ->{'displayName'};
-					}else {
-						$detail_assignee = "[Unassigned]";
-					}
-					
-					$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
+					$item_json = $myjson3->{'value'}[0]; // trasverse json structure
+					$detail_fields = $item_json->fields;
+					$detail_id = $item_json->{'id'};
 					
 					
-					$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
-					
-					// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
-					$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
-					
-					$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
-					$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
-					$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
-					$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
-					$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
-					$detail_WebsiteType = 	isset( $detail_fields->{'Custom.WebsiteType'} ) ? $detail_fields->{'Custom.WebsiteType'} : '' ;
-					$detail_ImpactedAudience = isset( $detail_fields->{'Custom.ImpactedAudience'}) ? $detail_fields->{'Custom.ImpactedAudience'} : '' ;
-					$detail_WebsiteAreas = isset($detail_fields->{'Custom.WebsiteAreas'}) ? $detail_fields->{'Custom.WebsiteAreas'} : '' ;
-					$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
-					$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
-					$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
-					$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
-					
-					if ( $detail_ShowOnWebsite == '1') { // this is our flag to only show those items that are flagged.
-						if ( $x == ($sizeof -1))  {// last row need top and bottom line
-							print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
-							print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
+					$WorkItemType = $detail_fields->{'System.WorkItemType'};
+					if ($WorkItemType != 'Issue') 
+						$skip_for_epic = 1; // set to 1 b/c we only show issues
+					else
+						$skip_for_epic = 0; // set to 1 if we need to skip
+					// At this point we need to see if this this one has a parent.
+					//
+					// we will do now is to see if this issue is tied to an Epic 
+					// the array we will check is EpicArray
+					$ParentID = (isset($detail_fields->{'System.Parent'}) ? $detail_fields->{'System.Parent'} : false) ;
+					// so if ParentId is not false we need to grab it instead
+
+					$saveid = $detail_id;
+
+					if (($ParentID != false) && ( $skip_for_epic == 0)) {
+					// we have a parent id, so we need to check our EpicArry and see if it is there
+					// if it there, that means we have already shown it, and we can skip this one
+
+						$srch = array_search($ParentID, $EpicArray);
+
+						if ( $srch === FALSE ) {
+							// not found, need to get it
+							array_push($EpicArray, $ParentID);
+							$epic_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ParentID . '&$expand=all&api-version=6.0';
+							$curl_workitem = curl_init();
+							curl_setopt($curl_workitem, CURLOPT_URL, $epic_url);
+							curl_setopt($curl_workitem, CURLOPT_POST, 0);  // this is a GET
+							curl_setopt($curl_workitem, CURLOPT_USERPWD, ':' . $PAT);
+							curl_setopt($curl_workitem, CURLOPT_RETURNTRANSFER, true );
+							$item_data = curl_exec($curl_workitem);
+			
+							curl_close($curl_workitem);
+			
+							$item_decode  = json_decode($item_data , false );
+							$item_json = $item_decode->{'value'}[0]; // trasverse json structure
+							$detail_fields = $item_json->fields;
+				
+							// So at this point item_json should hold the new Epic
 						} else {
-							print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
-							print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
+							// need to skip
+							$skip_for_epic = 1;
 						}
-						for($y = 0; $y < $FieldArraySize; $y++) {
-							$do_col_span = 0;
-							if (strtolower($FieldsToQuery[$y]) == "id") {
-								// special case for id of the issue
-								$CellValue = $detail_id;
+					}
+					print "<!-- Debugging List\n";
+					print "Workitemtype: " . $WorkItemType . "\n";
+					print "skip_for_epic: " . $skip_for_epic . "\n";
+					print "ParentID: " . $ParentID . "\n";
+					print "detail_id: " . $detail_id . "\n";
+					print "-->\n";
+
+					if ( $skip_for_epic == 0) {
+						$detail_title = $detail_fields->{'System.Title'};
+						if (isset($detail_fields ->{'System.AssignedTo'})) {
+							// have an assignee
+							$stdClass_object = $detail_fields ->{'System.AssignedTo'};
+							$detail_assignee = $stdClass_object ->{'displayName'};
+						}else {
+							$detail_assignee = "[Unassigned]";
+						}
+						
+						$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
+						
+						
+						$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
+						
+						// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
+						$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
+						
+						$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
+						$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
+						$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
+						$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
+						$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
+						$detail_WebsiteType = 	isset( $detail_fields->{'Custom.WebsiteType'} ) ? $detail_fields->{'Custom.WebsiteType'} : '' ;
+						$detail_ImpactedAudience = isset( $detail_fields->{'Custom.ImpactedAudience'}) ? $detail_fields->{'Custom.ImpactedAudience'} : '' ;
+						$detail_WebsiteAreas = isset($detail_fields->{'Custom.WebsiteAreas'}) ? $detail_fields->{'Custom.WebsiteAreas'} : '' ;
+						$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
+						$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
+						$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
+						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
+						
+						if ( $detail_ShowOnWebsite == '1') { // this is our flag to only show those items that are flagged.
+							if ( $x == ($sizeof -1))  {// last row need top and bottom line
+								print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
+								print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
 							} else {
-								if ($FieldsToQuery[$y][0] == "|") { 
-									$do_col_span = $do_col_span + 1;
-									print "</tr>\n<tr >";
-									print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
-									print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
-										substr($HeaderFields[$y], 1) . ':&nbsp</B>';
-								}
-								// okay at this point we will check to see if we have a question mark
-								// if we do we will take the first field and if there is something there
-								// we will use it, if not we will print the second field regardless of what
-								// is there
-								$has_question_mark = strpos($FieldsToQuery[$y], "?");
-								if ($has_question_mark == FALSE) {
-									# no question mark 
-									$CellValue = (isset($myjson3->{'fields'}->{$FieldsToQuery[$y]}) ? 
-										$myjson3->{'fields'}->{$FieldsToQuery[$y]} : false);
-									// need to check for priority Microsoft.VSTS.Common.Priority
-									if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
-										switch($CellValue) {
-											case "1":
-												$CellValue = "Critical";
-												break;
-											case "2":
-												$CellValue = "High";
-												break;
-											case "3":
-												$CellValue = "Med";
-												break;
-											case "4":
-												$CellValue = "Low";
-												break;
-										}
-									}
-									if ($CharCount[$y] > 0) 
-										$CellValue = substr($CellValue, 0, 10);
-								} else {
-									$condit_array = explode("?",$FieldsToQuery[$y]);
-									$condit_array[0] = trim($condit_array[0]);
-									$condit_array[1] = trim($condit_array[1]);
-									$CellValue = (isset($myjson3->{'fields'}->{$condit_array[0]}) ? 
-										$myjson3->{'fields'}->{$condit_array[0]} : false);
-									if ($CellValue == FALSE) {
-										$CellValue = (isset($myjson3->{'fields'}->{$condit_array[1]}) ? 
-										$myjson3->{'fields'}->{$condit_array[1]} : false);
-									}
-									if ($CharCount[$y] > 0) 
-										$CellValue = substr($CellValue, 0, 10);
-								}	
+								print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
+								print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
 							}
-							if ($do_col_span > 0) {
-								print $CellValue . "</td>";
-								for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
-										print '<td style="display: none"></td>';
+							for($y = 0; $y < $FieldArraySize; $y++) {
+								$do_col_span = 0;
+								if (strtolower($FieldsToQuery[$y]) == "id") {
+									// special case for id of the issue
+									$CellValue = $detail_id;
+								} else {
+									if ($FieldsToQuery[$y][0] == "|") { 
+										$do_col_span = $do_col_span + 1;
+										print "</tr>\n<tr >";
+										print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
+										print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
+											substr($HeaderFields[$y], 1) . ':&nbsp</B>';
+									}
+									// okay at this point we will check to see if we have a question mark
+									// if we do we will take the first field and if there is something there
+									// we will use it, if not we will print the second field regardless of what
+									// is there
+									$has_question_mark = strpos($FieldsToQuery[$y], "?");
+									if ($has_question_mark == FALSE) {
+										# no question mark 
+										$CellValue = (isset($detail_fields->{$FieldsToQuery[$y]}) ? 
+											$detail_fields->{$FieldsToQuery[$y]} : false);
+										// need to check for priority Microsoft.VSTS.Common.Priority
+										if ($FieldsToQuery[$y]== "Microsoft.VSTS.Common.Priority") {
+											switch($CellValue) {
+												case "1":
+													$CellValue = "Critical";
+													break;
+												case "2":
+													$CellValue = "High";
+													break;
+												case "3":
+													$CellValue = "Med";
+													break;
+												case "4":
+													$CellValue = "Low";
+													break;
+											}
+										}
+										if ($CharCount[$y] > 0) 
+											$CellValue = substr($CellValue, 0, 10);
+									} else {
+										$condit_array = explode("?",$FieldsToQuery[$y]);
+										$condit_array[0] = trim($condit_array[0]);
+										$condit_array[1] = trim($condit_array[1]);
+										$CellValue = (isset($detail_fields->{$condit_array[0]}) ? 
+											$detail_fields->{$condit_array[0]} : false);
+										if ($CellValue == FALSE) {
+											$CellValue = (isset($detail_fields->{$condit_array[1]}) ? 
+											$detail_fields->{$condit_array[1]} : false);
+										}
+										if ($CharCount[$y] > 0) 
+											$CellValue = substr($CellValue, 0, 10);
+									}	
 								}
-							}else
-								print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+								if ($do_col_span > 0) {
+									print $CellValue . "</td>";
+									for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
+											print '<td style="display: none"></td>';
+									}
+								}else
+									print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+							}
+							print "</tr>\n";
 						}
-						print "</tr>\n";
 					}
 		
 				}
