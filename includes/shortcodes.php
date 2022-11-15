@@ -414,7 +414,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$done=1;
 	$colwidth = 130;
 	//$total_width = 1400; // This is the total width of the graph
-	$columns_to_show = 8; // this is number of columns to show
+	$columns_to_show = 9; // this is number of columns to show
 	$days_per_column = 7; // days per column
 	$total_width = $colwidth * $columns_to_show;
 	$column_size = $total_width / $columns_to_show ;
@@ -507,7 +507,7 @@ li.extra {
 	print "/* -- Debugging:cur_day_str(initially): " . date_format($cur_day_str,"Y/m/d H:i:s") . " --- monday value: " . $monday . " */\n";
 	date_sub($cur_day_str, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
 	
-	$week_add = ($columns_to_show * $days_per_column). " days";  // columns * 2 (because each column represents 2 weeks 
+	$week_add = (($columns_to_show - 1)* $days_per_column). " days";  // columns * 2 (because each column represents 2 weeks 
 	print "/* -- Debugging: weeks to add: " . $week_add . " */\n";
 	$weeks = date_interval_create_from_date_string( $week_add) ;
 	$end_day = date_create( date("Y-m-d"));
@@ -568,10 +568,11 @@ li.extra {
 		print "/* -- Debugging:graph_end: " . $graph_end . " */ \n";
 		if ($graph_end == 0)
 				$graph_end = $graph_start;
-		else if ($graph_end > 0) 
-			$graph_end = $graph_start + 2; // past?
+		else if ($graph_end > 0) {
+			$graph_end = $graph_end + 2; // past?
+			print "/* -- Debugging:graph_end: +2 " . $graph_end . " */ \n";
+		}
 		
-	
 		print "/* -- Debugging:final graph_start: " . $graph_start . " */ \n";
 		print "/* -- Debugging:final graph_end: " . $graph_end . " */ \n";
 		//The grid-column property specifies a grid item's size and location in a grid layout, and is a shorthand property for the following properties:
@@ -600,7 +601,7 @@ li.extra {
 		$ghant_end_date = clone $ghant_start_date;
 		date_add($ghant_end_date,date_interval_create_from_date_string( ($days_per_column-1) . " days"));
 		//old date range show //. "<br>" . date_format($ghant_end_date,"Y/m/d") 
-		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"Y/m/d") . "</center></span>" );
+		print("<span><center>Week of:<br>" . date_format($ghant_start_date,"m/d/Y") . "</center></span>" );
 		date_add ( $ghant_start_date , date_interval_create_from_date_string( $days_per_column . " days"));	
 		$done = $done + 1;
 	}
@@ -630,9 +631,10 @@ li.extra {
 		$sprint_end = date_create(substr($sprint_finishDate, 0, 10));
 		
 		print("<script>\n");
+		print "/* -- Debugging2:sprint name: " . $sprint_name . " */\n";
 		print "/* -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
 		print "/* -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
-
+		print "/* -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
 		print "/* -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
 		print "/* -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
 		print("</script>\n");
@@ -657,7 +659,6 @@ li.extra {
 			$sizeof2 = count($worklistitems);
 			
 			print("<script>\n");
-			
 			$sprint_goal = $sprint_name;
 			$sprint_text = "";
 			
@@ -710,7 +711,8 @@ li.extra {
 					// this does the summary
 					if( $detail_ShowOnWebsite == '1') {
 						$sprint_text = $sprint_text . "<div style=\\\"cursor: pointer; \\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
-						$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
+						//$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
+						$sprint_text = $sprint_text . "<i>" . $detail_id . "</i> - ";
 						$sprint_text = $sprint_text . $detail_title ;
 						
 						$sprint_text = $sprint_text . "<br></div>";
@@ -764,7 +766,7 @@ li.extra {
 					print '<div class="chart-row-item" >' . ($display_row) . '</div>' . "\n";
 					print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
 					print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
-					print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date_format($sprint_str, "Y/m/d") . "</font>";
+					print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date_format($sprint_str, "m/d/Y") . "</font>";
 					print '</li>';
 					// now we add the popup stuff
 					print '</ul>' ;
@@ -774,7 +776,8 @@ li.extra {
 			} else {
 				print "<!-- -- Debugging2: skipping -->\n";
 			}
-		}	
+		}
+		
 	}
 	print "</div>"; //class="chart"
 	print "</div>"; //class="container "
@@ -1264,7 +1267,10 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 								$do_col_span = 0;
 								if (strtolower($FieldsToQuery[$y]) == "id") {
 									// special case for id of the issue
-									$CellValue = $detail_id;
+									if ($ParentID != False)
+										$CellValue = $ParentID;
+									else
+										$CellValue = $detail_id;
 								} else {
 									if ($FieldsToQuery[$y][0] == "|") { 
 										$do_col_span = $do_col_span + 1;
