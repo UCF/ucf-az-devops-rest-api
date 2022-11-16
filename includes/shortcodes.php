@@ -40,6 +40,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$wpdb->show_errors();
 		$wpdb->flush();
 	}
+	
+	$include = sanitize_text_field($atts['include']);
 
 	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
@@ -118,7 +120,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
-	print '<th style="width: 1%;" >&nbsp;</th>';
+	print '<th>&nbsp;</th>';
 	for($x = 0; $x < $FieldArraySize; $x++) {
 		if ($HeaderFields[$x][0] != "|" ) {
 			// if the first field is a vertical bar we will skip it for now b/c it will be handled later
@@ -159,14 +161,18 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$skip_for_epic = 0;
 		//
 		// this  is to make sure that this item is not tied to a sprint
-		$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
-		print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
-		if ($IterationPath == $wp_devops_setup->project ) {
-			$skip_for_epic = 0;
-			print "<!-- debugging setting skip_for_epic to zero -->\n";
-		} else {
-			$skip_for_epic = 1;
-			print "<!-- debugging setting skip_for_epic to 1 -->\n";
+		if(strtolower($include) == "all" )
+				$skip_for_epic = 0;
+		else {
+			$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
+			print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
+			if ($IterationPath == $wp_devops_setup->project ) {
+				$skip_for_epic = 0;
+				print "<!-- debugging setting skip_for_epic to zero -->\n";
+			} else {
+				$skip_for_epic = 1;
+				print "<!-- debugging setting skip_for_epic to 1 -->\n";
+			}
 		}
 		// we will do now is to see if this issue is tied to an Epic 
 		// the array we will check is EpicArray
@@ -209,10 +215,10 @@ function wp_devops_wiql($atts = [], $content = null) {
 			// This does the start of each row, we want a line at the top execpt for the last row we need 2 lines, top and bottom
 			if ( $x == ($sizeof -1))  {// last row need top and bottom line
 				print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
-				print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
+				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
 			} else {
 				print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
-				print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
+				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
 			}
 	
 			// okay so  for the returned item
@@ -224,7 +230,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 					if ($FieldsToQuery[$y][0] == "|") { // This handles the ability to have 1 field do a col_span across the whole row
 						$do_col_span = $do_col_span + 1;
 						print "</tr>\n<tr >";
-						print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
+						print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
 						print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
 							substr($HeaderFields[$y], 1) . ':&nbsp</B>';
 					}
@@ -262,7 +268,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 						$condit_array[1] = trim($condit_array[1]);
 						$CellValue = (isset($item_json->{'fields'}->{$condit_array[0]}) ? 
 							$item_json->{'fields'}->{$condit_array[0]} : false);
-						if ($CellValue == FALSE) {
+						if (strlen(trim($CellValue)) == 0) {
 							$CellValue = (isset($item_json->{'fields'}->{$condit_array[1]}) ? 
 							$item_json->{'fields'}->{$condit_array[1]} : false);
 						}
@@ -276,7 +282,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 							print '<td style="display: none"></td>';
 					}
 				}else
-					print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+					print '<td style="' . $FieldStyle[$x] . '; background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 			}
 			print "</tr>\n";
 		}
@@ -1111,7 +1117,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 				print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 				print "    <thead>\n";
 				print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
-				print '<th style="width: 1%;" >&nbsp;</th>';
+				print '<th >&nbsp;</th>';
 				for($xx = 0; $xx < $FieldArraySize; $xx++) {
 					if ($HeaderFields[$x][0] != "|" ) {
 						// if the first field is a vertical bar we will skip it for now b/c it will be handled later
@@ -1258,10 +1264,10 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 						if ( $detail_ShowOnWebsite == '1') { // this is our flag to only show those items that are flagged.
 							if ( $x == ($sizeof -1))  {// last row need top and bottom line
 								print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
-								print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
+								print('<td style="width: 0px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
 							} else {
 								print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
-								print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
+								print('<td style="width: 0px; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
 							}
 							for($y = 0; $y < $FieldArraySize; $y++) {
 								$do_col_span = 0;
@@ -1275,7 +1281,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 									if ($FieldsToQuery[$y][0] == "|") { 
 										$do_col_span = $do_col_span + 1;
 										print "</tr>\n<tr >";
-										print('<td style="width: 1%; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
+										print('<td style="background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
 										print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
 											substr($HeaderFields[$y], 1) . ':&nbsp</B>';
 									}
