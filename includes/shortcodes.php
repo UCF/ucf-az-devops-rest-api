@@ -40,6 +40,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$wpdb->show_errors();
 		$wpdb->flush();
 	}
+	
+	$include = sanitize_text_field($atts['include']);
 
 	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
@@ -159,14 +161,18 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$skip_for_epic = 0;
 		//
 		// this  is to make sure that this item is not tied to a sprint
-		$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
-		print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
-		if ($IterationPath == $wp_devops_setup->project ) {
-			$skip_for_epic = 0;
-			print "<!-- debugging setting skip_for_epic to zero -->\n";
-		} else {
-			$skip_for_epic = 1;
-			print "<!-- debugging setting skip_for_epic to 1 -->\n";
+		if(strtolower($include) == "all" )
+				$skip_for_epic = 0;
+		else {
+			$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
+			print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
+			if ($IterationPath == $wp_devops_setup->project ) {
+				$skip_for_epic = 0;
+				print "<!-- debugging setting skip_for_epic to zero -->\n";
+			} else {
+				$skip_for_epic = 1;
+				print "<!-- debugging setting skip_for_epic to 1 -->\n";
+			}
 		}
 		// we will do now is to see if this issue is tied to an Epic 
 		// the array we will check is EpicArray
@@ -262,7 +268,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 						$condit_array[1] = trim($condit_array[1]);
 						$CellValue = (isset($item_json->{'fields'}->{$condit_array[0]}) ? 
 							$item_json->{'fields'}->{$condit_array[0]} : false);
-						if ($CellValue == FALSE) {
+						if (strlen(trim($CellValue)) == 0) {
 							$CellValue = (isset($item_json->{'fields'}->{$condit_array[1]}) ? 
 							$item_json->{'fields'}->{$condit_array[1]} : false);
 						}
