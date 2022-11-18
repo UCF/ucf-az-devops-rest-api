@@ -16,8 +16,8 @@ function devops_cmp($a, $b) {
 	global $devops_sort_field;
 	
 	print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
-	$flda = $a->{'fields'}->{$devops_sort_field};
-	$fldb = $b->{'fields'}->{$devops_sort_field};
+	$flda = trim($a->{'fields'}->{$devops_sort_field});
+	$fldb = trim($b->{'fields'}->{$devops_sort_field});
 	print "<!-- Debug: a: " . $flda . " -->\n";
     return strcmp($flda , $fldb);
 
@@ -27,12 +27,31 @@ function devops_custom_cmp($a, $b) {
 	global $custom_sort_array;
 	
 	print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
-	$flda = $a->{'fields'}->{$devops_sort_field};
-	$fldb = $b->{'fields'}->{$devops_sort_field};
-	$va = array_search($flda,$custom_sort_array);
-	$vb = array_search($fldb,$custom_sort_array);
+	// need to make sure that this field has a value
+	if(isset($a->{'fields'}->{$devops_sort_field})) {
+		$flda = trim($a->{'fields'}->{$devops_sort_field});
+		$va = array_search($flda,$custom_sort_array);
+		if ($va === FALSE)
+			$va = count($custom_sort_array) + 1;
+	} else {
+		$flda = "";
+		$va = count($custom_sort_array) + 1;
+	}
+	if(isset($b->{'fields'}->{$devops_sort_field})) {
+		$fldb = trim($b->{'fields'}->{$devops_sort_field});
+		$vb = array_search($fldb,$custom_sort_array);
+		if ($vb === FALSE)
+				$vb = count($custom_sort_array) +1;
+	} else {
+		$fldb = "";
+		$vb =  count($custom_sort_array) +1;
+	}
 	print "<!-- Debug: a: " . $flda . " -- " . $va . " -->\n";
-    return ($va - $vb);
+	print "<!-- Debug: b: " . $fldb . " -- " . $vb . " -->\n";
+	if ($va == $vb)  // sort on value - just incase there are multiple undefined
+		return strcmp($flda, $fldb);
+	else
+		return ($va - $vb);
 
 }
 
@@ -71,8 +90,17 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$wpdb->flush();
 	}
 	
-	$include = sanitize_text_field($atts['include']);
-	$sort = sanitize_text_field($atts['sort']);
+	if(isset($atts['include']))
+		$include = sanitize_text_field($atts['include']);
+	else
+		$include = "";
+	
+	if(isset($atts['sort']))
+		$sort = sanitize_text_field($atts['sort']);
+	else
+		$sort = "";
+	
+	
 	print "<!-- debug: sort value is: " . $sort . "-->\n";
 
 	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
@@ -188,55 +216,6 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$item_decode  = json_decode($item_data , false );
 		$item_json = $item_decode->{'value'}[0]; // trasverse json structure
 		
-		array_push($workitems_array,  $item_json );
-	}
-	
-	// At this point we want to sort the object if the sort option is present
-	if (strlen($sort) > 0) {
-			print("<!-- Debug sort: " . $sort . " -->\n");
-			$has_question_mark = strpos($sort, "?");
-			if ($has_question_mark != FALSE) {
-				// means we have a custom sort
-				$condit_array = explode("?",$sort);
-				$devops_sort_field = $condit_array[0];  // assigns what field will be sorting on
-				$custom_sort_array = explode(",", $condit_array[1]);
-				$ca = count($custom_sort_array);
-				for($xz=0; $xz < $ca; $xz++) 
-					$custom_sort_array[$xz] = trim($custom_sort_array[$xz]);
-				usort($workitems_array, "devops_custom_cmp");
-			} else {
-				$devops_sort_field = $sort; // just sort of the field, no custom order
-				usort($workitems_array, "devops_cmp");
-			}				
-	}
-
-	
-	for($x = 0; $x < $sizeof; $x++){
-		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
-		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
-		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
-		
-		$item_json = $workitems_array[$x];
-
-		//
-		// okay so the Wiql query will remove any issues that shouldn't be shown on the website (flag) and those that
-		// aren't attached to a sprint.  If it is tied to a sprint it isn't consided in-queue/backlog.
-		$skip_for_epic = 0;
-		//
-		// this  is to make sure that this item is not tied to a sprint
-		if(strtolower($include) == "all" )
-				$skip_for_epic = 0;
-		else {
-			$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
-			print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
-			if ($IterationPath == $wp_devops_setup->project ) {
-				$skip_for_epic = 0;
-				print "<!-- debugging setting skip_for_epic to zero -->\n";
-			} else {
-				$skip_for_epic = 1;
-				print "<!-- debugging setting skip_for_epic to 1 -->\n";
-			}
-		}
 		// we will do now is to see if this issue is tied to an Epic 
 		// the array we will check is EpicArray
 		$ParentID = (isset($item_json->{'fields'}->{'System.Parent'}) ? $item_json->{'fields'}->{'System.Parent'} : false) ;
@@ -264,13 +243,60 @@ function wp_devops_wiql($atts = [], $content = null) {
 			
 				$item_decode  = json_decode($item_data , false );
 				$item_json = $item_decode->{'value'}[0]; // trasverse json structure
-				
-				// So at this point item_json should hold the new Epic
+				array_push($workitems_array,  $item_json ); // replace item with Parent
+			}
+		} else {		
+			array_push($workitems_array,  $item_json );
+		}
+	}
+	
+	// At this point we want to sort the object if the sort option is present
+	if (strlen($sort) > 0) {
+			print("<!-- Debug sort: " . $sort . " -->\n");
+			$has_question_mark = strpos($sort, "?");
+			if ($has_question_mark != FALSE) {
+				// means we have a custom sort
+				$condit_array = explode("?",$sort);
+				$devops_sort_field = $condit_array[0];  // assigns what field will be sorting on
+				$custom_sort_array = explode(",", $condit_array[1]);
+				$ca = count($custom_sort_array);
+				for($xz=0; $xz < $ca; $xz++) 
+					$custom_sort_array[$xz] = trim($custom_sort_array[$xz]);
+				usort($workitems_array, "devops_custom_cmp");
 			} else {
-				// need to skip
+				$devops_sort_field = $sort; // just sort of the field, no custom order
+				usort($workitems_array, "devops_cmp");
+			}				
+	}
+
+	$sizeof = count($workitems_array); // need to reset the count just incase a Parent has more than 1 child, the number of items will be reduced
+	for($x = 0; $x < $sizeof; $x++){
+		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
+		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
+		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
+		
+		$item_json = $workitems_array[$x];
+
+		//
+		// okay so the Wiql query will remove any issues that shouldn't be shown on the website (flag) and those that
+		// aren't attached to a sprint.  If it is tied to a sprint it isn't consided in-queue/backlog.
+		$skip_for_epic = 0;
+		//
+		// this  is to make sure that this item is not tied to a sprint
+		if(strtolower($include) == "all" )
+				$skip_for_epic = 0;
+		else {
+			$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
+			print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
+			if ($IterationPath == $wp_devops_setup->project ) {
+				$skip_for_epic = 0;
+				print "<!-- debugging setting skip_for_epic to zero -->\n";
+			} else {
 				$skip_for_epic = 1;
+				print "<!-- debugging setting skip_for_epic to 1 -->\n";
 			}
 		}
+
 	
 		if($skip_for_epic == 0) {
 			// show this
@@ -345,7 +371,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 							print '<td style="display: none"></td>';
 					}
 				}else
-					print '<td style="' . $FieldStyle[$x] . '; background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+					print '<td style="' . $FieldStyle[$y] . '; background-color:White; vertical-align: top;">' . $CellValue . "</td>";
 			}
 			print "</tr>\n";
 		}
