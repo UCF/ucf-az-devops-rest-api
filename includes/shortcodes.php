@@ -8,8 +8,38 @@
 # one thing we need to do is to add some error handleing on the API calls which I don't have
 #
 
+# sorting function
+$devops_sort_field = "";
+$custom_sort_array = array();
+
+function devops_cmp($a, $b) {
+	global $devops_sort_field;
+	
+	print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
+	$flda = $a->{'fields'}->{$devops_sort_field};
+	$fldb = $b->{'fields'}->{$devops_sort_field};
+	print "<!-- Debug: a: " . $flda . " -->\n";
+    return strcmp($flda , $fldb);
+
+}
+function devops_custom_cmp($a, $b) {
+	global $devops_sort_field;
+	global $custom_sort_array;
+	
+	print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
+	$flda = $a->{'fields'}->{$devops_sort_field};
+	$fldb = $b->{'fields'}->{$devops_sort_field};
+	$va = array_search($flda,$custom_sort_array);
+	$vb = array_search($fldb,$custom_sort_array);
+	print "<!-- Debug: a: " . $flda . " -- " . $va . " -->\n";
+    return ($va - $vb);
+
+}
+
 function wp_devops_wiql($atts = [], $content = null) {
 	global $wpdb;
+	global $devops_sort_field;
+	global $custom_sort_array;
 	 
 	 
 	ob_start(); // this allows me to use echo instead of using concat all strings
@@ -42,6 +72,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 	}
 	
 	$include = sanitize_text_field($atts['include']);
+	$sort = sanitize_text_field($atts['sort']);
+	print "<!-- debug: sort value is: " . $sort . "-->\n";
 
 	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
@@ -96,10 +128,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	$myjson  = json_decode($data , false );
 	
-	//print "<PRE>sizeof workitems: ";
-	//print_r($myjson);
-	//print "</PRE>\n";
-	//return;
+
 	
 	
 	$workitems = (isset( $myjson->{'workItems'} ) ? $myjson->{'workItems'} : '') ;
@@ -112,6 +141,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 		return;
 	}
 	$sizeof = count($workitems);
+
 
 	//print "<PRE>sizeof workitems: " . $sizeof . "</PRE>\n";
 
@@ -134,6 +164,11 @@ function wp_devops_wiql($atts = [], $content = null) {
 	print "    </thead>\n";
 	print "    <tbody>\n";
 	// so myjson has all the id's from the query.  We will loop through all the return id's
+	
+	$workitems_array = array();
+	
+	// okay we will collect all the items first, that way if we have a custom sort we are ready to handle that
+	//
 	for($x = 0; $x < $sizeof; $x++){
 		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
 		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
@@ -152,8 +187,36 @@ function wp_devops_wiql($atts = [], $content = null) {
 		
 		$item_decode  = json_decode($item_data , false );
 		$item_json = $item_decode->{'value'}[0]; // trasverse json structure
-
 		
+		array_push($workitems_array,  $item_json );
+	}
+	
+	// At this point we want to sort the object if the sort option is present
+	if (strlen($sort) > 0) {
+			print("<!-- Debug sort: " . $sort . " -->\n");
+			$has_question_mark = strpos($sort, "?");
+			if ($has_question_mark != FALSE) {
+				// means we have a custom sort
+				$condit_array = explode("?",$sort);
+				$devops_sort_field = $condit_array[0];  // assigns what field will be sorting on
+				$custom_sort_array = explode(",", $condit_array[1]);
+				$ca = count($custom_sort_array);
+				for($xz=0; $xz < $ca; $xz++) 
+					$custom_sort_array[$xz] = trim($custom_sort_array[$xz]);
+				usort($workitems_array, "devops_custom_cmp");
+			} else {
+				$devops_sort_field = $sort; // just sort of the field, no custom order
+				usort($workitems_array, "devops_cmp");
+			}				
+	}
+
+	
+	for($x = 0; $x < $sizeof; $x++){
+		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
+		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
+		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
+		
+		$item_json = $workitems_array[$x];
 
 		//
 		// okay so the Wiql query will remove any issues that shouldn't be shown on the website (flag) and those that
