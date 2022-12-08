@@ -597,7 +597,11 @@ li.extra {
   }
 \n";
 
-	$monday = ((date('d') % 7 ) + 7) . " days";
+	print "/* -- Debugging:date('w'): " . date('w')  . "*/\n";
+	$datew = date('w') - 1;
+	if ( $datew < 0 )
+		$datew = 6;
+	$monday = $datew . " days";
 	$cur_day_str = date_create( date("Y-m-d"));
 	print "/* -- Debugging:cur_day_str(initially): " . date_format($cur_day_str,"Y/m/d H:i:s") . " --- monday value: " . $monday . " */\n";
 	date_sub($cur_day_str, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
