@@ -189,7 +189,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$sizeof = count($workitems);
 
 
-	print "<PRE>sizeof workitems: " . $sizeof . "</PRE>\n";
+	//print "<PRE>sizeof workitems: " . $sizeof . "</PRE>\n";
 
 	$count_pipe = 0;
 	//echo "sizeof:" . $sizeof;
