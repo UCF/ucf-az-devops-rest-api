@@ -80,7 +80,10 @@
 
 /* (C) TITLE + TEXT + CLOSE BUTTON  */
 #detailtitle { background: #b3e6b3; }
-#detailtext { background: #fff; }
+#detailtext { 
+	background: #fff;
+	overflow-y: scroll; /* Show vertical scrollbar */
+}
 #detailtitle, #detailtext { 
 	padding: 10px; 
 	margin: 0; 
