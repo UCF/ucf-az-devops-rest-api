@@ -11,22 +11,29 @@
 # sorting function
 $devops_sort_field = "";
 $custom_sort_array = array();
+$turn_on_debug = 1;
+
 
 function devops_cmp($a, $b) {
 	global $devops_sort_field;
-	
-	print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
+	global $turn_on_debug;
+
+	if ($turn_on_debug == 1) 
+		print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
 	$flda = trim($a->{'fields'}->{$devops_sort_field});
 	$fldb = trim($b->{'fields'}->{$devops_sort_field});
-	print "<!-- Debug: a: " . $flda . " -->\n";
+	if ($turn_on_debug == 1) 
+		print "<!-- Debug: a: " . $flda . " -->\n";
     return strcmp($flda , $fldb);
 
 }
 function devops_custom_cmp($a, $b) {
 	global $devops_sort_field;
 	global $custom_sort_array;
+	global $turn_on_debug;
 	
-	print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
+	if ($turn_on_debug == 1) 
+		print "<!-- Debug: devops_sort_field: " . $devops_sort_field . " -->\n";
 	// need to make sure that this field has a value
 	if(isset($a->{'fields'}->{$devops_sort_field})) {
 		$flda = trim($a->{'fields'}->{$devops_sort_field});
@@ -46,8 +53,11 @@ function devops_custom_cmp($a, $b) {
 		$fldb = "";
 		$vb =  count($custom_sort_array) +1;
 	}
-	print "<!-- Debug: a: " . $flda . " -- " . $va . " -->\n";
-	print "<!-- Debug: b: " . $fldb . " -- " . $vb . " -->\n";
+	if ($turn_on_debug == 1) {
+		print "<!-- Debug: a: " . $flda . " -- " . $va . " -->\n";
+		print "<!-- Debug: b: " . $fldb . " -- " . $vb . " -->\n";
+	}
+	
 	if ($va == $vb)  // sort on value - just incase there are multiple undefined
 		return strcmp($flda, $fldb);
 	else
@@ -59,6 +69,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	global $wpdb;
 	global $devops_sort_field;
 	global $custom_sort_array;
+	global $turn_on_debug;
 	 
 	 
 	ob_start(); // this allows me to use echo instead of using concat all strings
@@ -100,11 +111,11 @@ function wp_devops_wiql($atts = [], $content = null) {
 	else
 		$sort = "";
 	
-	
-	print "<!-- debug: sort value is: " . $sort . "-->\n";
+	if ($turn_on_debug == 1) 
+		print "<!-- debug: sort value is: " . $sort . "-->\n";
 
 	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
-	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ' . "\n";
 	
 	
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
@@ -128,6 +139,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 
 
 	$FieldArraySize = count($FieldsToQuery);
+
+	
 	// need to make sure that all our arrays don't have extra spaces
 	for($x = 0; $x < $FieldArraySize; $x++){
 		$FieldsToQuery[$x] = trim($FieldsToQuery[$x]);
@@ -153,12 +166,17 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$data = curl_exec($curl);
 	curl_close($curl);
 	
+	if ($turn_on_debug == 1) {
+		print "<!-- debug: \n";
+		print "json_string is: " . $json_string . "\n";
+		print "curl_exec returned: ";
+		print_r($data);
+		print "\n";
+		print "-->\n";
+	}
 	
 	$myjson  = json_decode($data , false );
-	
-
-	
-	
+		
 	$workitems = (isset( $myjson->{'workItems'} ) ? $myjson->{'workItems'} : '') ;
 	if ($workitems == '') {
 		print "<PRE>ERROR\n";
@@ -175,6 +193,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 
 	$count_pipe = 0;
 	//echo "sizeof:" . $sizeof;
+	print "\n";
 	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
@@ -252,7 +271,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	// At this point we want to sort the object if the sort option is present
 	if (strlen($sort) > 0) {
-			print("<!-- Debug sort: " . $sort . " -->\n");
+			if ($turn_on_debug == 1) 
+				print("<!-- Debug sort: " . $sort . " -->\n");
 			$has_question_mark = strpos($sort, "?");
 			if ($has_question_mark != FALSE) {
 				// means we have a custom sort
@@ -287,13 +307,16 @@ function wp_devops_wiql($atts = [], $content = null) {
 				$skip_for_epic = 0;
 		else {
 			$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
-			print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
+			if ($turn_on_debug == 1) 
+				print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
 			if ($IterationPath == $wp_devops_setup->project ) {
 				$skip_for_epic = 0;
-				print "<!-- debugging setting skip_for_epic to zero -->\n";
+				if ($turn_on_debug == 1) 
+					print "<!-- debugging setting skip_for_epic to zero -->\n";
 			} else {
 				$skip_for_epic = 1;
-				print "<!-- debugging setting skip_for_epic to 1 -->\n";
+				if ($turn_on_debug == 1) 
+					print "<!-- debugging setting skip_for_epic to 1 -->\n";
 			}
 		}
 
@@ -408,7 +431,7 @@ print'
 // it only shows sprints that are current, ones in the past and to far in the future
 // are not shown.
 function wp_devops_current_sprint($atts = [], $content = null) {
-	
+	global $turn_on_debug;
 	global $wpdb;
 	global $wp;
 	
@@ -597,7 +620,8 @@ li.extra {
   }
 \n";
 
-	print "/* -- Debugging:date('w'): " . date('w')  . "*/\n";
+	if ($turn_on_debug == 1) 
+		print "/* -- Debugging:date('w'): " . date('w')  . "*/\n";
 	$datew = date('w') - 1;
 	if ( $datew < 0 )
 		$datew = 6;
@@ -639,37 +663,45 @@ li.extra {
 		
 		$to_old_to_show = 0;
 
-		print "/* -- Debugging:sprint_name: " . $sprint_name . " */\n";
-		print "/* -- Debugging:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
-		print "/* -- Debugging:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
-		print "/* -- Debugging:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
+		if ($turn_on_debug == 1)  {
+			print "/* -- Debugging:sprint_name: " . $sprint_name . " */\n";
+			print "/* -- Debugging:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
+			print "/* -- Debugging:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
+			print "/* -- Debugging:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
 
-		print "/* -- Debugging: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
-		print "/* -- Debugging: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
-		
+			print "/* -- Debugging: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
+			print "/* -- Debugging: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
+		}
 		$diff_str = date_diff($cur_day_str, $sprint_str);
 		$diff_strday = $diff_str->format("%R%a");
-		print "/* -- Debugging:diff_strday: " . $diff_strday . " */ \n";
+		if ($turn_on_debug == 1) 
+			print "/* -- Debugging:diff_strday: " . $diff_strday . " */ \n";
 		$graph_start = intdiv($diff_strday ,$days_per_column );
-		print "/* -- Debugging:graph_start: " . $graph_start . " */ \n";
+		if ($turn_on_debug == 1) 
+			print "/* -- Debugging:graph_start: " . $graph_start . " */ \n";
 		if ($graph_start <= 0) {
 			$graph_start = 1;
-			print "/* -- Debugging:graph_start: setting to 1 */ \n";
+			if ($turn_on_debug == 1) 
+				print "/* -- Debugging:graph_start: setting to 1 */ \n";
 		} else {
-			print "/* -- Debugging:graph_start: adding 1 to it */ \n";
+			if ($turn_on_debug == 1) 
+				print "/* -- Debugging:graph_start: adding 1 to it */ \n";
 			$graph_start = $graph_start +1 ;
 		}
 		
 		$diff_end = date_diff($cur_day_str, $sprint_end);
 		$diff_endday = $diff_end->format("%R%a");
-		print "/* -- Debugging:diff_endday: " . $diff_endday . " */ \n";
+		if ($turn_on_debug == 1) 
+			print "/* -- Debugging:diff_endday: " . $diff_endday . " */ \n";
 		$graph_end = intdiv($diff_endday ,$days_per_column );
-		print "/* -- Debugging:graph_end: " . $graph_end . " */ \n";
+		if ($turn_on_debug == 1) 
+			print "/* -- Debugging:graph_end: " . $graph_end . " */ \n";
 		if ($graph_end == 0)
 				$graph_end = $graph_start;
 		else if ($graph_end > 0) {
 			$graph_end = $graph_end + 2; // past?
-			print "/* -- Debugging:graph_end: +2 " . $graph_end . " */ \n";
+			if ($turn_on_debug == 1) 
+				print "/* -- Debugging:graph_end: +2 " . $graph_end . " */ \n";
 		}
 		
 		print "/* -- Debugging:final graph_start: " . $graph_start . " */ \n";
@@ -730,12 +762,14 @@ li.extra {
 		$sprint_end = date_create(substr($sprint_finishDate, 0, 10));
 		
 		print("<script>\n");
-		print "/* -- Debugging2:sprint name: " . $sprint_name . " */\n";
-		print "/* -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
-		print "/* -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
-		print "/* -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
-		print "/* -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
-		print "/* -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
+		if ($turn_on_debug == 1) {
+			print "/* -- Debugging2:sprint name: " . $sprint_name . " */\n";
+			print "/* -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
+			print "/* -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
+			print "/* -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
+			print "/* -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " */ \n";
+			print "/* -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " */ \n";
+		}
 		print("</script>\n");
 		if ( ($sprint_end >= $cur_day_str) and ($sprint_str <= $end_day)) {
 			$sprint_url = $List[$x]->{'url'};
@@ -807,15 +841,16 @@ li.extra {
 					$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
 					$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
 	
-					print "/* wp_devops_current_sprint Debugging Detail\n";
-					print "detail_id: " . $detail_id . "\n";
-					print "detail_createdDate: " . $detail_createdDate . "\n";
-					print "detail_UCFCategory: " . $detail_UCFCategory . "\n";
-					print "detail_Area: " . $detail_Area . "\n";
-					print "detail_Priority: " . $detail_Priority . "\n";
-					print "detail_ShowOnWebsite: " . $detail_ShowOnWebsite . "\n";
-					print "*/\n";	
-	
+					if ($turn_on_debug == 1)  {
+						print "/* wp_devops_current_sprint Debugging Detail\n";
+						print "detail_id: " . $detail_id . "\n";
+						print "detail_createdDate: " . $detail_createdDate . "\n";
+						print "detail_UCFCategory: " . $detail_UCFCategory . "\n";
+						print "detail_Area: " . $detail_Area . "\n";
+						print "detail_Priority: " . $detail_Priority . "\n";
+						print "detail_ShowOnWebsite: " . $detail_ShowOnWebsite . "\n";
+						print "*/\n";	
+					}
 	
 					// this does the summary
 					if( $detail_ShowOnWebsite == '1') {
@@ -857,15 +892,14 @@ li.extra {
 			date_sub($cur_day_end, date_interval_create_from_date_string($monday)); // this finds the first day of the ghant
 			date_add($cur_day_end, $weeks);
 	
-	
-			print "<!-- -- Debugging2:sprint_name: " . $sprint_name . " */\n";
-			print "<!-- -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " -->\n";
-			print "<!-- -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " -->\n";
-			print "<!-- -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
-	
-			print "<!-- -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " -->\n";
-			print "<!-- -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " -->\n";
-			
+			if ($turn_on_debug == 1) {
+				print "<!-- -- Debugging2:sprint_name: " . $sprint_name . " */\n";
+				print "<!-- -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " -->\n";
+				print "<!-- -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " -->\n";
+				print "<!-- -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
+				print "<!-- -- Debugging2: sprint_str: " . date_format($sprint_str,"Y/m/d H:i:s") . " -->\n";
+				print "<!-- -- Debugging2: sprint_end: " . date_format($sprint_end,"Y/m/d H:i:s") . " -->\n";
+			}
 			if ( $sprint_end >= $cur_day_str) {	// if the sprint ends before we start - don't show
 				if ( $sprint_str > $cur_day_end) {
 					print "<!-- -- Debugging2: skipping -->\n";
@@ -910,6 +944,7 @@ li.extra {
 // this function is designed to show a work item data elements 
 function show_workitem($id, $title, $assignee, $comment, $description, $area, $iteration )
 {
+	global $turn_on_debug;
 	//$id = "16007";
 	//$title = "INT013 PeopleFirst Payroll Deductions BNO002 - Duplicate Inputs";
 	//$description = "Quick Brown Fox";
@@ -1064,7 +1099,7 @@ function openDevOpsTab(evt, cityName) {
 //
 
 function wp_devops_list_sprint($atts = [], $content = null) {
-	
+	global $turn_on_debug;
 	global $wpdb;
 	global $wp;
 	
