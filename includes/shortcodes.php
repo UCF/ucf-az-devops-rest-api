@@ -75,6 +75,16 @@ function wp_devops_wiql($atts = [], $content = null) {
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
 
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
+	
+	print("\n");
+
+	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css';
+	$css_open = fopen($css_file, "r");
+	$css_data = fread($css_open, filesize($css_file));
+	fclose($css_open);
+	print( "<style>\n" . $css_data . "\n</style>\n");
+	
 	// Epic array to make sure we only print an Epic once
 	$EpicArray = array();
 	
@@ -293,9 +303,28 @@ function wp_devops_wiql($atts = [], $content = null) {
 	for($x = 0; $x < $sizeof; $x++){
 		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
 		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
+
 		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
 		
 		$item_json = $workitems_array[$x];
+		if ($turn_on_debug == 1) {
+			print "<!-- debug workitems: \n";
+			print_r($item_json);
+			print("-->\n");
+		}
+		$workitem_title = $item_json->{'fields'}->{'System.Title'};
+		if (isset($item_json->{'fields'}->{'System.AssignedTo'})) {
+			// have an assignee
+			$stdClass_object = $item_json->{'fields'}->{'System.AssignedTo'};
+			$workitem_assignee = $stdClass_object ->{'displayName'};
+		}else {
+			$workitem_assignee = "[Unassigned]";
+		}
+		$workitem_descr = isset($item_json->{'fields'}->{'System.Description'}  ) ? $item_json->{'fields'}->{'System.Description'} : '';
+		$workitem_Area = isset( $item_json->{'fields'}->{'Custom.WebsiteAreas'} ) ? $item_json->{'fields'}->{'Custom.WebsiteAreas'} : '';
+		$workitem_IterationPath = isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : '';
+
+
 
 		//
 		// okay so the Wiql query will remove any issues that shouldn't be shown on the website (flag) and those that
@@ -393,8 +422,20 @@ function wp_devops_wiql($atts = [], $content = null) {
 					for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
 							print '<td style="display: none"></td>';
 					}
-				}else
-					print '<td style="' . $FieldStyle[$y] . '; background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+				} else {
+					print ("<script>\n") ;
+					$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
+					$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+					print "var Detail_" . $x . "_0 = \"" . $sprint_detail . '";' . "\n";
+					print ("</script>\n") ;
+					
+					print '<td style="' . $FieldStyle[$y] . '; background-color:White; vertical-align: top;">' ;
+					$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
+					print $div_value;
+					print $CellValue ;
+					print ("</div>\n");
+					print "</td>";
+				}
 			}
 			print "</tr>\n";
 		}
@@ -420,6 +461,11 @@ print'
 </script>
 ';
 	
+	$js_file = str_replace('\\', '/', ABSPATH) . 'wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js';
+	$js_open = fopen($js_file, "r");
+	$js_data = fread($js_open, filesize($js_file));
+	fclose($js_open);
+	print "<script>" . $js_data . "</script>";
 	
 	$content = ob_get_contents();
 	ob_end_clean();
@@ -449,7 +495,7 @@ function wp_devops_current_sprint($atts = [], $content = null) {
 	$css_open = fopen($css_file, "r");
 	$css_data = fread($css_open, filesize($css_file));
 	fclose($css_open);
-	print "<style>" . $css_data . "</stype>";
+	print "<style>" . $css_data . "</style>";
 		
 	
 	$sql_setup = "select entry_index,pat_token," . 
