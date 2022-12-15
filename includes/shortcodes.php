@@ -114,7 +114,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$Project = str_replace(" ", "%20", $wp_devops_setup->project); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
 	$PAT= $wp_devops_setup->pat_token; //"gx6jvhpecqdaneevel7owmtr7yd5ja5p675t3hwnbamvmgkuyq7q"; // This is currently my Personal Access Token. This needs to be changed
 	$Wiql = $wp_devops_return->wiql; 
-	//'"Select [System.Id] from WorkItems where [Custom.UCFDisplayOnWebsite] = True and [System.State] = \"Done\" "';
+	//'"Select [System.Id] from WorkItems where [Custom.DisplayonWebsite] = True and [System.State] = \"Done\" "';
 	$FieldsToQuery = explode(",",$wp_devops_return->fields_to_query);
 	$HeaderFields = explode(",",$wp_devops_return->header_fields);
 	$FieldStyle = explode(",",$wp_devops_return->field_style);
@@ -793,10 +793,10 @@ li.extra {
 					$detail_descr = isset($detail_fields->{'System.Description'}  ) ? $detail_fields->{'System.Description'} : '';
 					
 					// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
-					$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
+					$detail_ShowOnWebsite = isset($detail_fields->{'Custom.DisplayonWebsite'}) ? $detail_fields->{'Custom.DisplayonWebsite'} : '0';
 					$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
 					$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
-					$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
+					$detail_UCFCategory = 	isset( $detail_fields->{'Custom.Category'} ) ? $detail_fields->{'Custom.Category'} : '';
 					$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
 					$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
 					$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
@@ -806,6 +806,16 @@ li.extra {
 					$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
 					$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
 					$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
+	
+					print "/* wp_devops_current_sprint Debugging Detail\n";
+					print "detail_id: " . $detail_id . "\n";
+					print "detail_createdDate: " . $detail_createdDate . "\n";
+					print "detail_UCFCategory: " . $detail_UCFCategory . "\n";
+					print "detail_Area: " . $detail_Area . "\n";
+					print "detail_Priority: " . $detail_Priority . "\n";
+					print "detail_ShowOnWebsite: " . $detail_ShowOnWebsite . "\n";
+					print "*/\n";	
+	
 	
 					// this does the summary
 					if( $detail_ShowOnWebsite == '1') {
@@ -1041,7 +1051,7 @@ function openDevOpsTab(evt, cityName) {
     tablinks[i].className = tablinks[i].className.replace(" active", "");
   }
   document.getElementById(cityName).style.display = "block";
-  evt.currentTarget.className += " active";
+  /* not needed? evt.currentTarget.className += " active"; */
 }
 </script>
 ';
@@ -1095,7 +1105,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization); 
 	$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
 	$PAT= $wp_devops_setup->pat_token;  
-	//'"Select [System.Id] from WorkItems where [Custom.UCFDisplayOnWebsite] = True and [System.State] = \"Done\" "';
+	//'"Select [System.Id] from WorkItems where [Custom.DisplayonWebsite] = True and [System.State] = \"Done\" "';
 	$FieldsToQuery = explode(",",$wp_devops_return->fields_to_query);
 	$HeaderFields = explode(",",$wp_devops_return->header_fields);
 	$FieldStyle = explode(",",$wp_devops_return->field_style);
@@ -1316,12 +1326,16 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 							$skip_for_epic = 1;
 						}
 					}
+					/*
 					print "<!-- Debugging List\n";
 					print "Workitemtype: " . $WorkItemType . "\n";
 					print "skip_for_epic: " . $skip_for_epic . "\n";
 					print "ParentID: " . $ParentID . "\n";
 					print "detail_id: " . $detail_id . "\n";
-					print "-->\n";
+					print "\ndetail_fields:\n";
+					print_r($detail_fields);
+					print "\n-->\n";
+					*/
 
 					if ( $skip_for_epic == 0) {
 						$detail_title = $detail_fields->{'System.Title'};
@@ -1339,20 +1353,29 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 						$detail_IterationPath = isset($detail_fields->{'System.IterationPath'}) ? $detail_fields->{'System.IterationPath'} : '';
 						
 						// if this gives an error, maybe the field is not defined, if you set it to '1' it will always show the workitem
-						$detail_ShowOnWebsite = isset($detail_fields->{'Custom.UCFDisplayOnWebsite'}) ? $detail_fields->{'Custom.UCFDisplayOnWebsite'} : '0';
+						$detail_ShowOnWebsite = isset($detail_fields->{'Custom.DisplayonWebsite'}) ? $detail_fields->{'Custom.DisplayonWebsite'} : '0';
 						
 						$detail_createdDate = 	isset( $detail_fields->{'System.CreatedDate'} ) ? $detail_fields->{'System.CreatedDate'} : '';
-						$detail_UCFCategory = 	isset( $detail_fields->{'Custom.UCFCategory'} ) ? $detail_fields->{'Custom.UCFCategory'} : '';
-						$detail_Area = 			isset( $detail_fields->{'Custom.WebsiteAreas'} ) ?  $detail_fields->{'Custom.WebsiteAreas'} : '';
+						$detail_UCFCategory = 	isset( $detail_fields->{'Custom.Category'} ) ? $detail_fields->{'Custom.Category'} : '';
 						$detail_Priority = 		isset( $detail_fields->{'Microsoft.VSTS.Common.Priority'} ) ? $detail_fields->{'Microsoft.VSTS.Common.Priority'} : '' ;
-						$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';
-						$detail_WebsiteType = 	isset( $detail_fields->{'Custom.WebsiteType'} ) ? $detail_fields->{'Custom.WebsiteType'} : '' ;
+						$detail_State = 		isset( $detail_fields->{'System.State'} ) ? $detail_fields->{'System.State'} :  '';						
 						$detail_ImpactedAudience = isset( $detail_fields->{'Custom.ImpactedAudience'}) ? $detail_fields->{'Custom.ImpactedAudience'} : '' ;
-						$detail_WebsiteAreas = isset($detail_fields->{'Custom.WebsiteAreas'}) ? $detail_fields->{'Custom.WebsiteAreas'} : '' ;
 						$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
 						$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
 						$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
-						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
+						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, ' ', $detail_IterationPath );
+						
+						print "<!-- wp_devops_list_sprint Debugging Detail\n";
+						print "detail_id: " . $detail_id . "\n";
+						print "detail_createdDate: " . $detail_createdDate . "\n";
+						print "detail_UCFCategory: " . $detail_fields->{'Custom.Category'} . "\n";
+						print "detail_LevelofEffort: " . $detail_fields->{'Custom.LevelofEffort'} . "\n";
+						print "detail_Priority: " . $detail_Priority . "\n";
+						print "detail_ShowOnWebsite: " . $detail_ShowOnWebsite . "\n";
+						print "Custom.DisplayonWebsite: " . $detail_fields->{'Custom.DisplayonWebsite'} . "\n";
+						print "detail_id: " . $detail_id . "\n";
+						
+						print "-->\n";
 						
 						if ( $detail_ShowOnWebsite == '1') { // this is our flag to only show those items that are flagged.
 							if ( $x == ($sizeof -1))  {// last row need top and bottom line
@@ -1449,7 +1472,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
     $( window ).on( "load", function() {
         console.log( "window loaded" );	
 		document.getElementById("tab1").style.display = "block";
-		evt.currentTarget.className += " active";
+		/* not needed? evt.currentTarget.className += " active"; */
     });
 
 (function() {

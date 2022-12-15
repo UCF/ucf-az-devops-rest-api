@@ -47,6 +47,7 @@ var detail = {
 	dtext: null,
 	dtitle: null, 
 	wrapper: null,
+	window_height: null,
 	
 	init : () => {
 		detail.wrapper = document.createElement("div");
@@ -71,7 +72,9 @@ var detail = {
 		
 		detail_msgtitle = "DetailTitle_" + x + "_" + w_z;
 		detailtitle = window[detail_msgtitle];
-
+		
+		window_height = window.innerHeight;
+		detail.dtext.style.height = window_height * .8 + "px"; /* "400px"; */
 		detail.dtitle.innerHTML = '<table style="width:100%"><tr><td>' + detailtitle + '</td><td style="text-align:right">&#10006;</td></tr></table>'; 
 		detail.dtext.innerHTML = detailtext;
 		detail.wrapper.classList.add("open");
