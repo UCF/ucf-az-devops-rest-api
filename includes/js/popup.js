@@ -75,6 +75,7 @@ var detail = {
 		
 		window_height = window.innerHeight;
 		window_width = window.innerWidth;
+		/* need to figure out size of popup */
 		detail.dtext.style.maxHeight = window_height * .7 + "px"; /* "400px"; */
 		detail.dtext.style.maxWidth = window_width * .6 + "px"; /* "400px"; */
 		detail.dtitle.innerHTML = '<table style="width:100%"><tr><td>' + detailtitle + '</td><td style="text-align:right">&#10006;</td></tr></table>'; 

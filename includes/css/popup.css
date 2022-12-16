@@ -80,6 +80,7 @@
   background: #fff; 
   
   /* (B2) DIMENSIONS This changes the size of the detail box */
+  /* moved some items to javascript on sizing of window */
   min-width: 320px; 
   
 }

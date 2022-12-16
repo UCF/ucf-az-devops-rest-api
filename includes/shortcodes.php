@@ -1,5 +1,4 @@
 <?php
-
 #
 # okay this function basically does Wiql from devops based off of the settings
 # and then uses jquery datatable to show the rows.
