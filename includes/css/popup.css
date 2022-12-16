@@ -71,18 +71,23 @@
 /* (B) detailUP BOX ITSELF */
 #detailbox {
   /* (B1) ABSOLUTE CENTER */
-  position: absolute; top: 50%; left: 50%;
+  /* position: absolute; top: 50%; left: 50%; */
+  position: absolute; top: 55%; left: 50%; 
   transform: translate(-50%, -50%);
-
+  
+  overflow-y: scroll; /* Show vertical scrollbar */
+  overflow-x: scroll; /* Show horizontal scrollbar */
+  background: #fff; 
+  
   /* (B2) DIMENSIONS This changes the size of the detail box */
-  min-width: 320px; max-width: 1200px;
+  min-width: 320px; 
+  
 }
 
 /* (C) TITLE + TEXT + CLOSE BUTTON  */
 #detailtitle { background: #b3e6b3; }
 #detailtext { 
 	background: #fff;
-	overflow-y: scroll; /* Show vertical scrollbar */
 }
 #detailtitle, #detailtext { 
 	padding: 10px; 
