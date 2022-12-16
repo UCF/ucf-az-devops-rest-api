@@ -1,5 +1,4 @@
 <?php
-
 #
 # okay this function basically does Wiql from devops based off of the settings
 # and then uses jquery datatable to show the rows.
@@ -301,30 +300,12 @@ function wp_devops_wiql($atts = [], $content = null) {
 
 	$sizeof = count($workitems_array); // need to reset the count just incase a Parent has more than 1 child, the number of items will be reduced
 	for($x = 0; $x < $sizeof; $x++){
-		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
-		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
 
 		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
 		
 		$item_json = $workitems_array[$x];
-		if ($turn_on_debug == 1) {
-			print "<!-- debug workitems: \n";
-			print_r($item_json);
-			print("-->\n");
-		}
-		$workitem_title = $item_json->{'fields'}->{'System.Title'};
-		if (isset($item_json->{'fields'}->{'System.AssignedTo'})) {
-			// have an assignee
-			$stdClass_object = $item_json->{'fields'}->{'System.AssignedTo'};
-			$workitem_assignee = $stdClass_object ->{'displayName'};
-		}else {
-			$workitem_assignee = "[Unassigned]";
-		}
-		$workitem_descr = isset($item_json->{'fields'}->{'System.Description'}  ) ? $item_json->{'fields'}->{'System.Description'} : '';
-		$workitem_Area = isset( $item_json->{'fields'}->{'Custom.WebsiteAreas'} ) ? $item_json->{'fields'}->{'Custom.WebsiteAreas'} : '';
-		$workitem_IterationPath = isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : '';
-
-
+		$workitem_id = $workitems_array[$x]->{'id'}; // not used maybe delete?
+		$workitem_url = $workitems_array[$x]->{'url'}; // this url didn't return all the info I was looking for
 
 		//
 		// okay so the Wiql query will remove any issues that shouldn't be shown on the website (flag) and those that
@@ -352,16 +333,44 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 		if($skip_for_epic == 0) {
 			// show this
-		
+			if ($turn_on_debug == 1) {
+				print "<!-- debug workitems: \n";
+				print_r($item_json);
+				print("-->\n");
+			}
+			$workitem_title = $item_json->{'fields'}->{'System.Title'};
+			if (isset($item_json->{'fields'}->{'System.AssignedTo'})) {
+				// have an assignee
+				$stdClass_object = $item_json->{'fields'}->{'System.AssignedTo'};
+				$workitem_assignee = $stdClass_object ->{'displayName'};
+			}else {
+				$workitem_assignee = "[Unassigned]";
+			}
+			$workitem_descr = isset($item_json->{'fields'}->{'System.Description'}  ) ? $item_json->{'fields'}->{'System.Description'} : '';
+			$workitem_Area = isset( $item_json->{'fields'}->{'Custom.WebsiteAreas'} ) ? $item_json->{'fields'}->{'Custom.WebsiteAreas'} : '';
+			$workitem_Title = isset( $item_json->{'fields'}->{'System.Title'} ) ? $item_json->{'fields'}->{'System.Title'} : '';
+			$workitem_IterationPath = isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : '';
+
+			print ("<script>\n") ;
+			$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
+			$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+			print "var Detail_" . $x . "_0 = \"" . $sprint_detail . '";' . "\n";
+			if(strlen($workitem_Title) > 50)
+				print 'var DetailTitle_' . $x . '_0 = "' . substr($workitem_Title, 0, 40) . '...";' . "\n";
+			else
+				print 'var DetailTitle_' . $x . '_0 = "' . $workitem_Title . '";' . "\n";
+			print ("</script>\n") ;
+					
 			// This does the start of each row, we want a line at the top execpt for the last row we need 2 lines, top and bottom
 			if ( $x == ($sizeof -1))  {// last row need top and bottom line
 				print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
 				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
 			} else {
-				print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";
+				print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";	
 				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
 			}
 	
+			
 			// okay so  for the returned item
 			for($y = 0; $y < $FieldArraySize; $y++) {
 				$do_col_span = 0;
@@ -422,18 +431,12 @@ function wp_devops_wiql($atts = [], $content = null) {
 					for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
 							print '<td style="display: none"></td>';
 					}
-				} else {
-					print ("<script>\n") ;
-					$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
-					$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-					print "var Detail_" . $x . "_0 = \"" . $sprint_detail . '";' . "\n";
-					print ("</script>\n") ;
-					
+				} else {		
 					print '<td style="' . $FieldStyle[$y] . '; background-color:White; vertical-align: top;">' ;
 					$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
 					print $div_value;
-					print $CellValue ;
-					print ("</div>\n");
+					print $CellValue ;		
+					print ("</div>\n");					
 					print "</td>";
 				}
 			}
@@ -1012,23 +1015,22 @@ function show_workitem($id, $title, $assignee, $comment, $description, $area, $i
 	
 	
 	
-$return_content =  'assigneed: ' . $assignee . '<p>&nbsp;</p>
-
-<table border="0" cellpadding="1" cellspacing="1" style="width:870px">
+$return_content =  '
+<table border="0" cellpadding="1" cellspacing="1" >
 	<tbody>
 		<tr>
 			<td rowspan="4" style="background-color:#339933; width:31px">&nbsp;</td>
-			<td style="vertical-align:top; width:291px"><strong>Issue ' .  $id . '</strong></td>
-			<td style="text-align:right; white-space:nowrap; width:551px">
-			<table border="0" cellpadding="1" cellspacing="1" style="width:480px">
+			<td style="vertical-align:top; "><strong>Issue ' .  $id . '</strong></td>
+			<td style="text-align:right; white-space:nowrap; ">
+			<table border="0" cellpadding="1" cellspacing="1" >
 				<tbody>
 					<tr>
-						<td style="width:66px">Area</td>
-						<td style="width:410px">' . $area . '</td>
+						<td ><B>Area:</B></td>
+						<td >' . $area . '</td>
 					</tr>
 					<tr>
-						<td style="width:66px">Iteration</td>
-						<td style="width:410px">' . $iteration . '</td>
+						<td ><B>Iteration:</B></td>
+						<td >' . $iteration . '</td>
 					</tr>
 				</tbody>
 			</table>
@@ -1038,18 +1040,17 @@ $return_content =  'assigneed: ' . $assignee . '<p>&nbsp;</p>
 			<td colspan="3" rowspan="1" style="width:753px"><strong>' . $title . '</strong></td>
 		</tr>
 		<tr>
-			<td style="width:291px"><B>Assignee</B>:&nbsp;' .  $assignee . '</td>
-			<td colspan="2" rowspan="1" style="text-align:right; width:551px"></td>
+			<td colspan="2"><B>Assignee</B>:&nbsp;' .  $assignee . '</td>
 		</tr>
 		<tr>
-			<td colspan="2" rowspan="1" style="width:651px">
-			<table border="0" cellpadding="1" cellspacing="1" style="width:824px">
+			<td colspan="2" rowspan="1" >
+			<table border="0" cellpadding="1" cellspacing="1" >
 				<tbody>
 					<tr>
-						<td style="width:814px"><B>Description</B></td>
+						<td style="text-align: left"><B>Description</B></td>
 					</tr>
 					<tr>
-						<td style="width:814px">' .  $description . '</td>
+						<td >' .  $description . '</td>
 					</tr>
 				</tbody>
 			</table>
