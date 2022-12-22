@@ -1173,10 +1173,7 @@ function wp_devops_query($atts = [], $content = null) {
 	$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
 	$ucf_devops_pat_token = $wp_devops_setup->pat_token;
 	
-	#print "<PRE>";
-	#print_r($_POST);
-	#print "</PRE>";
-	
+
 	$queryid = $wp_devops_setup->queryid;    //"392fff89-3500-4880-a925-620650238fd5";
 	$queryname = $wp_devops_setup->queryname;
 	
@@ -1196,6 +1193,13 @@ function wp_devops_query($atts = [], $content = null) {
 	$myjson  = json_decode($data , false );
 	
 	$ucf_workItems = $myjson->{'workItems'};
+	
+	print "<PRE>";
+	print_r($ucf_workItems);
+	print "</PRE>";
+	
+	
+	
 	$ucf_count = count($ucf_workItems);
 	
 	$value_array = array(); // holds the count 
