@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 3.25
+* Version: 3.26
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -91,7 +91,6 @@ require_once( plugin_dir_path( __FILE__ ) . 'includes/admin_menu.php');
 
 require_once( plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php');
 
-require_once( plugin_dir_path( __FILE__ ) . 'includes/workday.php');
 
 function ucf_devops_rest_header() {
 echo '
