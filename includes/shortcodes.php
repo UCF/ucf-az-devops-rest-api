@@ -1221,13 +1221,10 @@ function wp_devops_query($atts = [], $content = null) {
 		
 		$myjson  = json_decode($ucf_item_data , false );
 		
-		print "<PRE>" . $item_url . "\njson_decode: \n";
-		print_r($myjson );
-		print "</PRE>";
-		
-			$content = ob_get_contents();
-	ob_end_clean();
-    return $content;
+//		print "<PRE>" . $item_url . "\njson_decode: \n";
+//		print_r($myjson );
+//		print "</PRE>";
+
 		
 		$item_json = $myjson->{'value'}[0]; // trasverse json structure
 		$detail_id = $item_json->{'id'};
@@ -1238,7 +1235,9 @@ function wp_devops_query($atts = [], $content = null) {
 			$thevalue = "(blank}";
 			
 		$srch = array_search($thevalue, $index_array, true);
-		print("<PRE>Search for:" . $thevalue . " is:" . $srch . "</PRE>\n");
+		print("<PRE>Search for:" . $thevalue . " is:";
+		print_r($srch)
+		print "</PRE>\n");
 		if ($srch === FALSE) { // need to add
 			array_push($index_array,$thevalue);
 			array_push($value_array, 1);
