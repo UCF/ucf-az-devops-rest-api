@@ -1198,10 +1198,6 @@ function wp_devops_query($atts = [], $content = null) {
 	print_r($ucf_workItems);
 	print "</PRE>";
 	
-	$content = ob_get_contents();
-	ob_end_clean();
-    return $content;
-	
 	$ucf_count = count($ucf_workItems);
 	
 	$value_array = array(); // holds the count 
@@ -1228,6 +1224,10 @@ function wp_devops_query($atts = [], $content = null) {
 		print "<PRE>" . $item_url . "\njson_decode: \n";
 		print_r($myjson );
 		print "</PRE>";
+		
+			$content = ob_get_contents();
+	ob_end_clean();
+    return $content;
 		
 		$item_json = $myjson->{'value'}[0]; // trasverse json structure
 		$detail_id = $item_json->{'id'};
