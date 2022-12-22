@@ -1194,11 +1194,13 @@ function wp_devops_query($atts = [], $content = null) {
 	
 	$ucf_workItems = $myjson->{'workItems'};
 	
-//	print "<PRE>";
-//	print_r($ucf_workItems);
-//	print "</PRE>";
+	print "<PRE>";
+	print_r($ucf_workItems);
+	print "</PRE>";
 	
-	
+	$content = ob_get_contents();
+	ob_end_clean();
+    return $content;
 	
 	$ucf_count = count($ucf_workItems);
 	
