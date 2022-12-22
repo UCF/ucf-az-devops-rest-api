@@ -1,4 +1,5 @@
 <?php
+
 #
 # okay this function basically does Wiql from devops based off of the settings
 # and then uses jquery datatable to show the rows.
@@ -1140,6 +1141,162 @@ function openDevOpsTab(evt, cityName) {
 
 }
 
+function wp_devops_query($atts = [], $content = null) {
+	global $turn_on_debug;
+	global $wpdb;
+	global $wp;
+	
+	
+	ob_start(); // this allows me to use echo instead of using concat all strings
+ 
+	$wiql_id_index =  sanitize_text_field($atts['wiql_id_index']);
+	$wiql_fieldname = sanitize_text_field($atts['field']);
+	if (isset($atts['charttype']))
+		$charttype = sanitize_text_field($atts['charttype']);
+	else
+		$charttype = "bar";
+	
+	$skip_devops_settings_form = 1;	
+	
+	$barColors = array("#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC", "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499", "#22AA99", "#AAAA11", "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#651067");
+
+
+	$sql_setup = "select a.entry_index, a.pat_token," . 
+		"a.description, a.organization,a.project, b.queryname, b.queryid from " . 
+	$wpdb->base_prefix . "ucf_devops_setup a, " . $wpdb->base_prefix . "ucf_devops_query b  where a.entry_index = b.entry_index and b.wiql_id_index = " . $wiql_id_index;
+	$wp_devops_setup = $wpdb->get_row($sql_setup);
+	if ($wp_devops_setup == false) {
+		$wpdb->show_errors();
+		$wpdb->flush();
+	}
+	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization);
+	$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
+	$ucf_devops_pat_token = $wp_devops_setup->pat_token;
+	
+	#print "<PRE>";
+	#print_r($_POST);
+	#print "</PRE>";
+	
+	$queryid = $wp_devops_setup->queryid;    //"392fff89-3500-4880-a925-620650238fd5";
+	$queryname = $wp_devops_setup->queryname;
+	
+	$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/wiql/" .  $queryid  ."?api-version=5.1";
+	$curl = curl_init();
+	
+
+	curl_setopt($curl, CURLOPT_URL, $url);
+	curl_setopt($curl, CURLOPT_POST, FALSE);
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+	curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+	$data = curl_exec($curl);
+	curl_close($curl);
+
+
+	$myjson  = json_decode($data , false );
+	
+	$ucf_workItems = $myjson->{'workItems'};
+	$ucf_count = count($ucf_workItems);
+	
+	$value_array = array(); // holds the count 
+	$index_array = array(); // holds the value/
+	
+	//so now we have a list of devops id, we need to get/find the value so we can count/group them
+	for ($i=0; $i < $ucf_count; $i++) {
+		$ucf_workitem_id = $ucf_workItems[$i]->{'id'};
+		$ucf_workitem_url = $ucf_workItems[$i]->{'url'};
+		
+		$item_url =  "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ucf_workitem_id . '&\$expand=all&api-version=6.0';
+		curl_setopt($curl, CURLOPT_URL, $item_url);
+		curl_setopt($curl, CURLOPT_POST, FALSE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+		curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+		$ucf_item_data = curl_exec($curl);
+		curl_close($curl);
+		
+		$myjson  = json_decode($ucf_item_data , false );
+		
+		$item_json = $myjson->{'value'}[0]; // trasverse json structure
+		$detail_id = $item_json->{'id'};
+		$thefields = $item_json->{'fields'}; 
+		if (isset($thefields->{$wiql_fieldname}))
+			$thevalue = strval($thefields->{$wiql_fieldname});
+		else
+			$thevalue = "(blank}";
+		
+		$srch = array_search($thevalue, $index_array, true);
+		if ($srch === FALSE) { // need to add
+			array_push($index_array,$thevalue);
+			array_push($value_array, 1);
+		} else { // need to increment
+			$value_array[$srch] = $value_array[$srch] + 1;
+		}
+	}
+
+	$chartid = "myChart_" . rand();  //this allows my code be on the page more than once
+	print '<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"> </script>';
+	print "\n";
+	print '<canvas id="' . $chartid . '" style="width:100%;max-width:1200px"></canvas>';
+	print "\n";
+	
+
+	$acount = count($index_array);
+	print '	<script> ' . "\n";
+	print '	var xValues = [';
+	for($i=0; $i < $acount; $i++) {
+		print '"' . $index_array[$i] . '"';
+		if ($i < ( $acount - 1) )
+			print ',';
+	}
+	print '];' . "\n";
+	
+	
+	print '	var yValues = [';
+	for($i=0; $i < $acount; $i++) {
+		print '"' . $value_array[$i] . '"';
+ 		if ($i < ( $acount - 1) )
+			print ',';
+	}
+	print '];' . "\n";
+	
+	print '	var barColors = [';
+	for($i = 0; $i < $acount; $i++) {
+		print '"' . $barColors[$i] . '"';
+		if ($i < ( $acount - 1) )
+			print ',';
+	}
+	print '];' . "\n";
+	
+	print '	new Chart("' . $chartid . '", {' . "\n";
+	print '			type: "' . $charttype . '",' . "\n";
+	print '			data: {' . "\n";
+	print '				labels: xValues,' . "\n";
+	print '				datasets: [{' . "\n";
+	print '				backgroundColor: barColors,' . "\n";
+	print '				data: yValues' . "\n";
+	print '			}]' . "\n";
+	print '		},' . "\n";
+	print '		options: {' . "\n";
+	if (($charttype == "pie"))  {
+		print '			legend: {display: true},' . "\n";
+	} else {
+		print '			legend: {display: false},' . "\n";
+	}
+	//print "			indexAxis: 'y', \n";
+	print '			title: {' . "\n";
+	print '			display: true,' . "\n";
+	print '			text: "Query Name:' . $queryname . '"' . "\n";
+	print '			}' . "\n";
+	print '		}' . "\n";
+	print '	});' . "\n";
+	print '	</script>' . "\n";
+			
+	$content = ob_get_contents();
+	ob_end_clean();
+    return $content;
+}
+
 //
 // this function allows us to show the current sprint, current+1, current+2, etc
 // in a jquery datatable 
@@ -1574,5 +1731,6 @@ add_shortcode ('wp_devops_wiql','wp_devops_wiql');
 add_shortcode ('wp_devops_current_sprint','wp_devops_current_sprint');
 add_shortcode ('wp_devops_tab_start','wp_devops_tab_start');
 add_shortcode ('wp_devops_tab_end','wp_devops_tab_end');
+add_shortcode ('wp_devops_query' , 'wp_devops_query');
 
 ?>
