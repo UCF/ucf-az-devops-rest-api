@@ -1221,7 +1221,7 @@ function wp_devops_query($atts = [], $content = null) {
 		
 		$myjson  = json_decode($ucf_item_data , false );
 		
-		print "<PRE>json_decode: \n";
+		print "<PRE>" . $item_url . "\njson_decode: \n";
 		print_r($myjson );
 		print "</PRE>";
 		
