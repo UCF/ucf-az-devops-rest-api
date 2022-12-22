@@ -1229,7 +1229,9 @@ function wp_devops_query($atts = [], $content = null) {
 			$thevalue = strval($thefields->{$wiql_fieldname});
 		else
 			$thevalue = "(blank}";
-			
+		
+		print "<PRE>thevalue is:" . $thevalue . "</PRE>\n";
+		
 		$srch = array_search($thevalue, $index_array, true);
 		if ($srch === FALSE) { // need to add
 			array_push($index_array,$thevalue);
