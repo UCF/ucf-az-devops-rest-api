@@ -1209,7 +1209,7 @@ function wp_devops_query($atts = [], $content = null) {
 		$ucf_workitem_url = $ucf_workItems[$i]->{'url'};
 		
 		$item_url =  "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ucf_workitem_id . '&$expand=all&api-version=6.0';
-		$curl = curl_init();
+		//$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $item_url);
 		curl_setopt($curl, CURLOPT_POST, FALSE);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
@@ -1220,12 +1220,7 @@ function wp_devops_query($atts = [], $content = null) {
 		curl_close($curl);
 		
 		$myjson  = json_decode($ucf_item_data , false );
-		
-//		print "<PRE>" . $item_url . "\njson_decode: \n";
-//		print_r($myjson );
-//		print "</PRE>";
-
-		
+	
 		$item_json = $myjson->{'value'}[0]; // trasverse json structure
 		$detail_id = $item_json->{'id'};
 		$thefields = $item_json->{'fields'}; 
@@ -1235,9 +1230,6 @@ function wp_devops_query($atts = [], $content = null) {
 			$thevalue = "(blank}";
 			
 		$srch = array_search($thevalue, $index_array, true);
-//		print("<PRE>Search for:" . $thevalue . " is:");
-//		print_r($srch);
-//		print "</PRE>\n";
 		if ($srch === FALSE) { // need to add
 			array_push($index_array,$thevalue);
 			array_push($value_array, 1);
