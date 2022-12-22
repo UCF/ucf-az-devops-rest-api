@@ -1210,7 +1210,7 @@ function wp_devops_query($atts = [], $content = null) {
 		$ucf_workitem_id = $ucf_workItems[$i]->{'id'};
 		$ucf_workitem_url = $ucf_workItems[$i]->{'url'};
 		
-		$item_url =  "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ucf_workitem_id . '&\$expand=all&api-version=6.0';
+		$item_url =  "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ucf_workitem_id . '&$expand=all&api-version=6.0';
 		curl_setopt($curl, CURLOPT_URL, $item_url);
 		curl_setopt($curl, CURLOPT_POST, FALSE);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
