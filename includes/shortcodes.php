@@ -1221,6 +1221,10 @@ function wp_devops_query($atts = [], $content = null) {
 		
 		$myjson  = json_decode($ucf_item_data , false );
 		
+		print "<PRE>json_decode: \n");
+		print_r($myjson );
+		print "</PRE>";
+		
 		$item_json = $myjson->{'value'}[0]; // trasverse json structure
 		$detail_id = $item_json->{'id'};
 		$thefields = $item_json->{'fields'}; 
