@@ -1235,9 +1235,9 @@ function wp_devops_query($atts = [], $content = null) {
 			$thevalue = "(blank}";
 			
 		$srch = array_search($thevalue, $index_array, true);
-		print("<PRE>Search for:" . $thevalue . " is:";
-		print_r($srch)
-		print "</PRE>\n");
+		print("<PRE>Search for:" . $thevalue . " is:");
+		print_r($srch);
+		print "</PRE>\n";
 		if ($srch === FALSE) { // need to add
 			array_push($index_array,$thevalue);
 			array_push($value_array, 1);
