@@ -1218,7 +1218,7 @@ function wp_devops_query($atts = [], $content = null) {
 		curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
 		$ucf_item_data = curl_exec($curl);
-		print "curl return: " . $ucf_item_data . "\n";
+		
 		curl_close($curl);
 		
 		$myjson  = json_decode($ucf_item_data , false );
