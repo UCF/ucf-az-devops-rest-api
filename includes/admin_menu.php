@@ -135,13 +135,9 @@ Function ucf_devops_rest_manage(){
 	
 		$myjson  = json_decode($data , false );
 		
-		print "<PRE>";
-		print_r($myjson);
-		print "</PRE>";
-
-		
-		
-
+		//print "<PRE>";
+		//print_r($myjson);
+		//print "</PRE>";
 
 	} else if ( isset($_POST['addwiql'])){
 		$tab = $_POST['tab'];
@@ -170,10 +166,120 @@ Function ucf_devops_rest_manage(){
 		if ($return == false) {
 				echo "<P>Insert into ucf_devops_main failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
 				echo "<P>SQL:<P>";
-				echo $sql_insert;
-				
+				echo $sql_insert;				
 		}
 		$wpdb->flush();
+	} else if (isset($_POST['updqueryfields'])) {
+		$ucf_xaxis_field_ID = sanitize_text_field($_POST['xaxis_field_ID']);
+		$ucf_yaxis_field_ID  = sanitize_text_field($_POST['yaxis_field_ID']);
+		$ucf_queryid  = sanitize_text_field($_POST['queryid']);
+		$ucf_wiql_id_index  = sanitize_text_field($_POST['wiql_id_index']);
+		
+		$sql = sprintf("update " . $wpdb->base_prefix . "ucf_devops_query " . 
+			"set xaxis_field='%s', yaxis_field='%s'" .
+			"where queryid='%s' and wiql_id_index='%s' ", $ucf_xaxis_field_ID, $ucf_yaxis_field_ID, $ucf_queryid, $ucf_wiql_id_index);
+		$return = $wpdb->query($sql);
+		if ($return == false) {
+				echo "<P>Update into ucf_devops_query failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>SQL:<P>";
+				echo $sql;				
+		}
+		$wpdb->flush();		
+		
+		
+	} else if (isset($_GET['queryid'])) { // update fields on query id
+		$queryid =  sanitize_text_field($_GET['queryid']);
+		$wiql_id_index =  sanitize_text_field($_GET['wiql_id_index']);
+		$entry_index = sanitize_text_field($_GET['entry_index']);
+		$skip_devops_settings_form = 1;	
+
+
+		$sql_setup = "select entry_index,pat_token," . 
+			"description,organization,project from " . 
+		$wpdb->base_prefix . "ucf_devops_setup where entry_index = " . $entry_index;
+		$wp_devops_setup = $wpdb->get_row($sql_setup);
+		if ($wp_devops_setup == false) {
+			$wpdb->show_errors();
+			$wpdb->flush();
+		}
+		$Organization = str_replace(" ", "%20", $wp_devops_setup->organization);
+		$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
+		$ucf_devops_pat_token = $wp_devops_setup->pat_token;
+		
+		#print "<PRE>";
+		#print_r($_POST);
+		#print "</PRE>";
+		
+		
+		$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/wiql/" .  $queryid  ."?api-version=5.1";
+		$curl = curl_init();
+		
+	
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, FALSE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+		curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+		$data = curl_exec($curl);
+		curl_close($curl);
+	
+	
+		$myjson  = json_decode($data , false );
+		
+		$ucf_columns = $myjson->{'columns'};
+		$ucf_count = count($ucf_columns);
+		
+		#print "<PRE>ucf_columnsf:";
+		#print_r($ucf_columns);
+		#print "</PRE>";		
+
+
+		$sql = "select wiql_id_index,entry_index,queryid,xaxis_field,yaxis_field from " . $wpdb->base_prefix . "ucf_devops_query where queryid = '" . $queryid . "' and wiql_id_index = " . $wiql_id_index ;
+		$eav_tblinfo = $wpdb->get_row($sql);
+		
+		#print "<PRE>sql reuturn of:" . $sql ;
+		#print_r($eav_tblinfo);
+		#print "</PRE>";		
+		
+		echo '<form action="" method="post">';
+		echo '<table>';
+		ECHO '<tr><td><label for="seachlabel">X-Axis:</label></td><td>';
+		
+		print '<select name="xaxis_field ID" id="xaxis_field">';
+		for($i=0; $i < $ucf_count ; $i++)  {
+			print'<option value="' . esc_html($ucf_columns[$i]->referenceName) . '">' . esc_html($ucf_columns[$i]->referenceName) . '</option>';
+		}	
+		print '</select>';
+		echo '</td></tr><p>';
+		
+#		ECHO '<tr><td><label for="seachlabel">Y-Axis:</label></td><td>';
+#		print '<select name="yaxis_field ID" id="yaxis_field">';
+#		for($i=0; $i < $ucf_count ; $i++)  {
+#			print'<option value="' . esc_html($ucf_columns[$i]->referenceName) . '">' . esc_html($ucf_columns[$i]->referenceName) . '</option>';
+#		}	
+#		print '</select>';
+#		echo '</td></tr><p>';
+	
+		print '</table>';
+
+		echo '<input type="hidden" id="queryname" name="queryname" value ="' . esc_html($queryid) . '">';
+		echo '<input type="hidden" id="queryid" name="queryid" value ="' . esc_html($queryid) . '">';
+		echo '<input type="hidden" id="wiql_id_index" name="wiql_id_index" value ="' . esc_html($wiql_id_index) . '">';
+		echo '<br>';		
+		echo '<input type="submit" value="Update Query Fields" name="updqueryfields" >';
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo '<input type="submit" value="Delete Query Field" name="delqueryfields" >';
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		echo '<input type="submit" value="Test DevOps" name="testqueryfields"  >';
+		echo '<br> </form>';
+	
+	
 	} else if (isset($_POST['updwiql'])){ // update entry
 		$tablid =  sanitize_text_field($_POST['entity']);
 		
@@ -193,12 +299,39 @@ Function ucf_devops_rest_manage(){
 		$return = $wpdb->query($sql );
 		$wpdb->show_errors();
 		$wpdb->flush();
-	} else if (isset($_POST['addquery'])){ // findquery entry	
+	} else if (isset($_POST['addquery'])){ // addquery entry	
 		$queryid = $_POST['queryid'];
 		
-		print "<PRE>";
-		print_r($_POST);
-		print "</PRE>";
+		//print "<PRE>";
+		//print_r($_POST);
+		//print "</PRE>";
+		
+		//if we are in a post then we can do an sql insert and then pull it down below
+		$sql_max="select max(wiql_id_index) + 1 as max_val from " . $wpdb->base_prefix  . "ucf_devops_query";
+		$ucf_devops_max = $wpdb->get_row($sql_max);
+		if (isset($ucf_devops_max->max_val))
+			$max_val = $ucf_devops_max->max_val;
+		else
+			$max_val = 1;
+		
+				
+		$ucf_queryid = sanitize_text_field($_POST['queryid']);
+		$ucf_queryname = sanitize_text_field($_POST['queryname']);
+		$ucf_devops_entry_index = sanitize_text_field($_POST['entry_index']);
+
+		
+		$sql_insert = sprintf("INSERT INTO " . $wpdb->base_prefix . "ucf_devops_query (wiql_id_index, entry_index,queryid,queryname, xaxis_field,yaxis_field) values (%d, %d, '%s', '%s', ' ', ' ')",
+			$max_val,$ucf_devops_entry_index, $ucf_queryid,$ucf_queryname );
+		
+		$return = $wpdb->query($sql_insert  );
+		if ($return == false) {
+				echo "<P>Insert into ucf_devops_query failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>SQL:<P>";
+				echo $sql_insert;
+				
+		}
+		$wpdb->flush();
+		
 	} else if (isset($_POST['findquery'])){ // findquery entry	
 		$tab = $_POST['tab'];
 		$entry_index = sanitize_text_field($_POST['DevOps_ID']);
@@ -265,7 +398,10 @@ Function ucf_devops_rest_manage(){
 		echo '<label>Query Id:</label>&nbsp;&nbsp;&nbsp;';
 		print '<input type="hidden" id="entry_index" name="entry_index"  value ="' . $entry_index . '">';
 		print '<input type="text" id="queryid" name="queryid" size="50" value ="">';
-		echo '<input type="submit" value="Add Query" name="addquery" onclick="submitquery()">';
+		print '<P>';
+		echo '<label>Query Name:</label>&nbsp;&nbsp;&nbsp;';
+		print '<input type="text" id="queryname" name="queryname" size="60" value ="">';
+		echo '<P><input type="submit" value="Add Query" name="addquery" onclick="submitquery()">';
 		echo '<br> </form>';
 		print '<script type="text/javascript" charset="utf8" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>';
 
@@ -281,8 +417,11 @@ function submitquery() {
 $('#querylisttable tr').click(function(){
    $(this).addClass('selected').siblings().removeClass('selected');    
    var value=$(this).find('td:first').html(); 
+   var value2=$(this).find('td:nth-child(2)').html(); 
    var container = document.getElementById('queryid');
+   var container2 = document.getElementById('queryname');
    container.value = value;
+   container2.value = value2;
 
 });
 
@@ -534,16 +673,17 @@ $('.ok').on('click', function(e){
 		print '<a class="nav-tab nav-tab-active" href="' . $current_url . '&tab=QueryIDSettings">Query Settings</a> ';	
 		print '</h3><P>'; 
 				
-		$sql = "select entry_index,wiql_index," . 
-				"wiql,fields_to_query,header_fields,field_style,char_count from " . $wpdb->base_prefix . "ucf_devops_main" .
-				" where length(fields_to_query) = 0";
+		$sql = "select entry_index,wiql_id_index,queryid,queryname, xaxis_field,yaxis_field from " . $wpdb->base_prefix . "ucf_devops_query";
 		echo '<table style="width: 50%; border: 1px solid black" id="myTable" >';
 		echo '<tr >
 		<th style="width: 30px; border: 1px solid black;" >ShortCode</th>
 		<th style="width: 10px; border: 1px solid black;" >WiQL ID</th>
 		<th style="width: 10px; border: 1px solid black;" >Entry ID</th>		
 		<th style="width: 50px; border: 1px solid black;" >Query ID</th>
-		</tr>
+		<th style="width: 50px; border: 1px solid black;" >Query Name</th>
+		<th style="width: 50px; border: 1px solid black;" >X-Axis Field</th>';
+		#<th style="width: 50px; border: 1px solid black;" >Y-Axis Field</th>
+		echo '</tr>
 		';
 		$results = $wpdb->get_results($sql);
 		$row_count = 1; 
@@ -551,21 +691,34 @@ $('.ok').on('click', function(e){
 			echo '<tr>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '[wp_devops_query record="' . esc_html($element->wiql_index) . '"]</td>';
+			echo '[wp_devops_query wiql_id_index="' . esc_html($element->wiql_id_index) . '"]</td>';
 			
 			
 			echo '<td style="width: 10px; border: 1px solid black;" >';
 			//note that the functional name is now in the URL below
-			echo '<a href="?page=ucf_devops_rest_manage&queryid=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
-			echo esc_html($element->wiql_index) . '</a></td>';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo esc_html($element->wiql_id_index) . '</a></td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&queryid=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
 			echo esc_html($element->entry_index) . '</a></td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&queryid=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
-			echo esc_html($element->wiql) . '</td>';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo esc_html($element->queryid) . '</td>';
+			
+			echo '<td style="width: 50px; border: 1px solid black;">' ;
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo esc_html($element->queryname) . '</td>';
+
+			
+			echo '<td style="width: 50px; border: 1px solid black;">' ;
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo esc_html($element->xaxis_field) . '</td>';
+			
+#			echo '<td style="width: 50px; border: 1px solid black;">' ;
+#			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+#			echo esc_html($element->yaxis_field) . '</td>';
 
 			echo '</tr>';
 			$row_count = $row_count + 1;

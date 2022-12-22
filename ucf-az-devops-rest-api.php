@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 3.23
+* Version: 3.26
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -47,6 +47,21 @@ function ucf_devops_rest_api(){
 	dbDelta( $sql );
 	//$wpdb->show_errors();
 	$wpdb->flush();
+	
+	// holds info on how to graph. y-axis will be counted, x-axis will hold the unique values
+	$sql = "CREATE TABLE " . $wpdb->base_prefix . "ucf_devops_query (
+		wiql_id_index		int,
+		entry_index		int,
+		queryid			varchar(128),
+		queryname		varchar(128),
+		xaxis_field		varchar(128),
+		yaxis_field		varchar(128),
+	PRIMARY KEY(wiql_id_index, entry_index, queryid)		
+	)";
+	dbDelta( $sql );
+	//$wpdb->show_errors();
+	$wpdb->flush();
+
 
 }
 
@@ -57,13 +72,13 @@ function myplugin_update(){
 		
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 	
-	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
-	print "<script>alert('" . $drop . "');</script>";
+//	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_main";
+//	print "<script>alert('" . $drop . "');</script>";
 //	dbDelta( $drop );
 //	$wpdb->flush();
 	
-	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
-	print "<script>alert('" . $drop . "');</script>";
+//	$drop = "DROP TABLE " . $wpdb->base_prefix . "ucf_devops_setup";
+//	print "<script>alert('" . $drop . "');</script>";
 //	dbDelta( $drop );
 //	$wpdb->flush();
 	
@@ -75,6 +90,7 @@ add_action('upgrader_process_complete', 'myplugin_update');
 require_once( plugin_dir_path( __FILE__ ) . 'includes/admin_menu.php');
 
 require_once( plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php');
+
 
 function ucf_devops_rest_header() {
 echo '
