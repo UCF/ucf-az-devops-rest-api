@@ -1204,7 +1204,10 @@ function wp_devops_query($atts = [], $content = null) {
 	$index_array = array(); // holds the value/
 	
 	print "<PRE>ucf_count is:" . $ucf_count . "</PRE>\n";
-	//$ucf_count = $ucf_count - 1;
+	print "<PRE>159:" ;
+	print_r($ucf_workItems[159]);
+	print "</PRE>";
+	$ucf_count = 1;
 	//so now we have a list of devops id, we need to get/find the value so we can count/group them
 	for ($i=0; $i < $ucf_count; $i++) {
 		$ucf_workitem_id = $ucf_workItems[$i]->{'id'};
