@@ -1203,7 +1203,7 @@ function wp_devops_query($atts = [], $content = null) {
 	$value_array = array(); // holds the count 
 	$index_array = array(); // holds the value/
 	
-	print "<PRE>ucf_count is:" . $ucf_count . "</PRE>\n";
+	//print "<PRE>ucf_count is:" . $ucf_count . "</PRE>\n";
 	//print "<PRE>159:" ;
 	//print_r($ucf_workItems[159]);
 	//print "</PRE>";
@@ -1245,9 +1245,9 @@ function wp_devops_query($atts = [], $content = null) {
 		}
 	}
 
-	print "<PRE>";
-	print_r($index_array);
-	print "</PRE><P>";
+	//print "<PRE>";
+	//print_r($index_array);
+	//print "</PRE><P>";
 
 	$chartid = "myChart_" . rand();  //this allows my code be on the page more than once
 	print '<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"> </script>';
