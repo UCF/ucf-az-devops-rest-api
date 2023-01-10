@@ -1020,7 +1020,7 @@ $return_content =  '
 <table border="0" cellpadding="1" cellspacing="1" >
 	<tbody>
 		<tr>
-			<td rowspan="4" style="background-color:#339933; width:31px">&nbsp;</td>
+			<td rowspan="4" style="background-color:#FFC409; width:31px">&nbsp;</td>
 			<td style="vertical-align:top; "><strong>Issue ' .  $id . '</strong></td>
 			<td style="text-align:right; white-space:nowrap; ">
 			<table border="0" cellpadding="1" cellspacing="1" >

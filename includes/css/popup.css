@@ -28,7 +28,7 @@
   min-width: 320px; max-width: 800px;
 }
 
-/* (C) TITLE + TEXT + CLOSE BUTTON  */
+/* (C) TITLE + TEXT + CLOSE BUTTON  UCF Gold color - #FFC409 */
 #poptitle { background: #FFC409; }
 #poptext { background: #fff; }
 #poptitle, #poptext { 
@@ -84,8 +84,8 @@
   
 }
 
-/* (C) TITLE + TEXT + CLOSE BUTTON  */
-#detailtitle { background: #b3e6b3; }
+/* (C) TITLE + TEXT + CLOSE BUTTON  black - #000000 - whie - #FFF*/
+#detailtitle { background: #FFC409; }
 #detailtext { 
 	background: #fff;
 }
@@ -93,7 +93,7 @@
 	padding: 10px; 
 	margin: 0; 
 } 
-#detailtitle, #detailclose { font-size: 28px; color: #fff; }
+#detailtitle, #detailclose { font-size: 28px; color: #000000; }
 
 #detailclose {
 	position: absolute; 
