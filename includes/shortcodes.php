@@ -1020,7 +1020,7 @@ $return_content =  '
 <table border="0" cellpadding="1" cellspacing="1" >
 	<tbody>
 		<tr>
-			<td rowspan="4" style="background-color:#339933; width:31px">&nbsp;</td>
+			<td rowspan="4" style="background-color:#FFC409; width:31px">&nbsp;</td>
 			<td style="vertical-align:top; "><strong>Issue ' .  $id . '</strong></td>
 			<td style="text-align:right; white-space:nowrap; ">
 			<table border="0" cellpadding="1" cellspacing="1" >
@@ -1173,10 +1173,7 @@ function wp_devops_query($atts = [], $content = null) {
 	$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
 	$ucf_devops_pat_token = $wp_devops_setup->pat_token;
 	
-	#print "<PRE>";
-	#print_r($_POST);
-	#print "</PRE>";
-	
+
 	$queryid = $wp_devops_setup->queryid;    //"392fff89-3500-4880-a925-620650238fd5";
 	$queryname = $wp_devops_setup->queryname;
 	
@@ -1190,33 +1187,45 @@ function wp_devops_query($atts = [], $content = null) {
 	curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
 	$data = curl_exec($curl);
-	curl_close($curl);
+	//curl_close($curl);
 
 
 	$myjson  = json_decode($data , false );
 	
 	$ucf_workItems = $myjson->{'workItems'};
+	
+	//print "<PRE>";
+	//print_r($ucf_workItems);
+	//print "</PRE>";
+	
 	$ucf_count = count($ucf_workItems);
 	
 	$value_array = array(); // holds the count 
 	$index_array = array(); // holds the value/
 	
+	//print "<PRE>ucf_count is:" . $ucf_count . "</PRE>\n";
+	//print "<PRE>159:" ;
+	//print_r($ucf_workItems[159]);
+	//print "</PRE>";
+	//$ucf_count = 1;
 	//so now we have a list of devops id, we need to get/find the value so we can count/group them
 	for ($i=0; $i < $ucf_count; $i++) {
 		$ucf_workitem_id = $ucf_workItems[$i]->{'id'};
 		$ucf_workitem_url = $ucf_workItems[$i]->{'url'};
 		
-		$item_url =  "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ucf_workitem_id . '&\$expand=all&api-version=6.0';
+		$item_url =  "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $ucf_workitem_id . '&$expand=all&api-version=6.0';
+
 		curl_setopt($curl, CURLOPT_URL, $item_url);
 		curl_setopt($curl, CURLOPT_POST, FALSE);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
 		curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
 		$ucf_item_data = curl_exec($curl);
-		curl_close($curl);
+		
+		//curl_close($curl);
 		
 		$myjson  = json_decode($ucf_item_data , false );
-		
+	
 		$item_json = $myjson->{'value'}[0]; // trasverse json structure
 		$detail_id = $item_json->{'id'};
 		$thefields = $item_json->{'fields'}; 
@@ -1224,6 +1233,8 @@ function wp_devops_query($atts = [], $content = null) {
 			$thevalue = strval($thefields->{$wiql_fieldname});
 		else
 			$thevalue = "(blank}";
+		
+		//print "<PRE>thevalue is:" . $thevalue . "</PRE>\n";
 		
 		$srch = array_search($thevalue, $index_array, true);
 		if ($srch === FALSE) { // need to add
@@ -1233,6 +1244,10 @@ function wp_devops_query($atts = [], $content = null) {
 			$value_array[$srch] = $value_array[$srch] + 1;
 		}
 	}
+
+	//print "<PRE>";
+	//print_r($index_array);
+	//print "</PRE><P>";
 
 	$chartid = "myChart_" . rand();  //this allows my code be on the page more than once
 	print '<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"> </script>';

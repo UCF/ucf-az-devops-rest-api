@@ -3,7 +3,7 @@
 * Plugin Name: Brad's Azure Devops REST API 4 UCF
 * Plugin URI: https://www.yourwebsiteurl.com/
 * Description: Brad's Azure Devops REST API 4 UCF
-* Version: 3.26
+* Version: 3.59
 * Author: Bradley Smith
 * Author URI: http://yourwebsiteurl.com/
 **/
@@ -179,6 +179,14 @@ add_action( 'wp_enqueue_script', function() {
 				'1.10.2', // Version
 				true      // Load in footer
 			);
+			
+			wp_enqueue_script(
+				'ucf-charts-data-tables', // Handle
+				'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js', // JS URL of the data tables plugin
+				array( 'jquery' ),  // Dependencies
+				'1.10.2', // Version
+				true      // Load in footer
+			);
 
 			
 			wp_enqueue_style( 'popup-css', get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css', 
@@ -188,6 +196,7 @@ add_action( 'wp_enqueue_script', function() {
 			array( 'jquery' ), '2.0', true);
 				
 			wp_enqueue_script( 'popup-js', 	get_site_url() . '/wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js' , false, '2.0', true);
+			
 
 } );
 
