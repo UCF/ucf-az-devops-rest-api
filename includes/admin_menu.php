@@ -68,9 +68,9 @@ Function ucf_devops_rest_manage(){
 		
 		$return = $wpdb->query($sql_insert  );
 		if ($return == false) {
-				echo "<P>Insert into ucf_devops_setup failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>Insert into ucf_devops_setup failed: " . ' - wpdb->last_error : ' . esc_html($wpdb->last_error);
 				echo "<P>SQL:<P>";
-				echo $sql_insert;
+				echo esc_html($sql_insert);
 				
 		}
 		$wpdb->flush();
@@ -97,9 +97,9 @@ Function ucf_devops_rest_manage(){
 		$sql_del = "delete from " . $wpdb->base_prefix . "ucf_devops_setup where entry_index = " . $tablid;
 		$return = $wpdb->query($sql_del  );
 		if ($return == false) {
-				echo "<P>Delete into ucf_devops_setup failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>Delete into ucf_devops_setup failed: " . ' - wpdb->last_error : ' . esc_html($wpdb->last_error);
 				echo "<P>SQL:<P>";
-				echo $sql_del;
+				echo esc_html($sql_del);
 				
 		}
 
@@ -164,9 +164,9 @@ Function ucf_devops_rest_manage(){
 			$ucf_devops_field_style ,$ucf_devops_char_count);	
 		$return = $wpdb->query($sql_insert  );
 		if ($return == false) {
-				echo "<P>Insert into ucf_devops_main failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>Insert into ucf_devops_main failed: " . ' - wpdb->last_error : ' . esc_html($wpdb->last_error);
 				echo "<P>SQL:<P>";
-				echo $sql_insert;				
+				echo esc_html($sql_insert);				
 		}
 		$wpdb->flush();
 	} else if (isset($_POST['updqueryfields'])) {
@@ -180,9 +180,9 @@ Function ucf_devops_rest_manage(){
 			"where queryid='%s' and wiql_id_index='%s' ", $ucf_xaxis_field_ID, $ucf_yaxis_field_ID, $ucf_queryid, $ucf_wiql_id_index);
 		$return = $wpdb->query($sql);
 		if ($return == false) {
-				echo "<P>Update into ucf_devops_query failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>Update into ucf_devops_query failed: " . ' - wpdb->last_error : ' . esc_html($wpdb->last_error);
 				echo "<P>SQL:<P>";
-				echo $sql;				
+				echo esc_html($sql);				
 		}
 		$wpdb->flush();		
 		
@@ -325,9 +325,9 @@ Function ucf_devops_rest_manage(){
 		
 		$return = $wpdb->query($sql_insert  );
 		if ($return == false) {
-				echo "<P>Insert into ucf_devops_query failed: " . ' - wpdb->last_error : ' . $wpdb->last_error;
+				echo "<P>Insert into ucf_devops_query failed: " . ' - wpdb->last_error : ' . esc_html($wpdb->last_error);
 				echo "<P>SQL:<P>";
-				echo $sql_insert;
+				echo esc_html($sql_insert);
 				
 		}
 		$wpdb->flush();
@@ -396,7 +396,7 @@ Function ucf_devops_rest_manage(){
 		}
 		print("</table><P>\n");	
 		echo '<label>Query Id:</label>&nbsp;&nbsp;&nbsp;';
-		print '<input type="hidden" id="entry_index" name="entry_index"  value ="' . $entry_index . '">';
+		print '<input type="hidden" id="entry_index" name="entry_index"  value ="' . esc_html($entry_index) . '">';
 		print '<input type="text" id="queryid" name="queryid" size="50" value ="">';
 		print '<P>';
 		echo '<label>Query Name:</label>&nbsp;&nbsp;&nbsp;';
@@ -534,9 +534,9 @@ $('.ok').on('click', function(e){
 	if ($tab == "DevOpsSettings") {
 		if ($skip_devops_settings_form  == 0) {
 			print '<h3 class="nav-tab-wrapper"> ';    
-			print '<a class="nav-tab nav-tab-active" href="' . $current_url . '&tab=DevOpsSettings">DevOps Settings</a> ';  
-			print '<a class="nav-tab" href="' . $current_url . '&tab=WiqlSettings">Wiql Settings</a> ';
-			print '<a class="nav-tab" href="' . $current_url . '&tab=QueryIDSettings">Query Settings</a> ';		
+			print '<a class="nav-tab nav-tab-active" href="' . esc_html($current_url) . '&tab=DevOpsSettings">DevOps Settings</a> ';  
+			print '<a class="nav-tab" href="' . esc_html($current_url) . '&tab=WiqlSettings">Wiql Settings</a> ';
+			print '<a class="nav-tab" href="' . esc_html($current_url) . '&tab=QueryIDSettings">Query Settings</a> ';		
 			print '</h3>'; 
 			echo '<form action="" method="post">
 			<table>
@@ -590,9 +590,9 @@ $('.ok').on('click', function(e){
 		if ($skip_devops_settings_form  == 0) {
 			print "<style>textarea { resize: both ; }</style>";
 			print '<h3 class="nav-tab-wrapper"> ';    
-			print '<a class="nav-tab " href="' . $current_url . '&tab=DevOpsSettings">DevOps Settings</a> ';  
-			print '<a class="nav-tab nav-tab-active" href="' . $current_url . '&tab=WiqlSettings">Wiql Settings</a> ';  
-			print '<a class="nav-tab" href="' . $current_url . '&tab=QueryIDSettings">Query Settings</a> ';	
+			print '<a class="nav-tab " href="' . esc_html($current_url) . '&tab=DevOpsSettings">DevOps Settings</a> ';  
+			print '<a class="nav-tab nav-tab-active" href="' . esc_html($current_url) . '&tab=WiqlSettings">Wiql Settings</a> ';  
+			print '<a class="nav-tab" href="' . esc_html($current_url) . '&tab=QueryIDSettings">Query Settings</a> ';	
 			print '</h3>'; 
 			echo '<form action="" method="post">
 			<P>
@@ -643,23 +643,23 @@ $('.ok').on('click', function(e){
 			
 			echo '<td style="width: 10px; border: 1px solid black;" >';
 			//note that the functional name is now in the URL below
-			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->wiql_index) . '</a></td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->entry_index) . '</a></td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->wiql) . '</td>';
 			
 			echo '<td style="width: 40px; border: 1px solid black;">';
-			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->fields_to_query) . '</td>';
 			
 			echo '<td style="width: 30px; border: 1px solid black;">';
-			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&wiql=' . esc_html($element->wiql_index) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->header_fields) . '</td>';
 			
 			echo '</tr>';
@@ -668,9 +668,9 @@ $('.ok').on('click', function(e){
 	}
 	else { //Query Tab 
 		print '<h3 class="nav-tab-wrapper"> ';    
-		print '<a class="nav-tab " href="' . $current_url . '&tab=DevOpsSettings">DevOps Settings</a> ';  
-		print '<a class="nav-tab " href="' . $current_url . '&tab=WiqlSettings">Wiql Settings</a> ';  
-		print '<a class="nav-tab nav-tab-active" href="' . $current_url . '&tab=QueryIDSettings">Query Settings</a> ';	
+		print '<a class="nav-tab " href="' . esc_html($current_url) . '&tab=DevOpsSettings">DevOps Settings</a> ';  
+		print '<a class="nav-tab " href="' . esc_html($current_url) . '&tab=WiqlSettings">Wiql Settings</a> ';  
+		print '<a class="nav-tab nav-tab-active" href="' . esc_html($current_url) . '&tab=QueryIDSettings">Query Settings</a> ';	
 		print '</h3><P>'; 
 				
 		$sql = "select entry_index,wiql_id_index,queryid,queryname, xaxis_field,yaxis_field from " . $wpdb->base_prefix . "ucf_devops_query";
@@ -696,24 +696,24 @@ $('.ok').on('click', function(e){
 			
 			echo '<td style="width: 10px; border: 1px solid black;" >';
 			//note that the functional name is now in the URL below
-			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->wiql_id_index) . '</a></td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->entry_index) . '</a></td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->queryid) . '</td>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->queryname) . '</td>';
 
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . $tab  . '">';
+			echo '<a href="?page=ucf_devops_rest_manage&entry_index=' .  esc_html($element->entry_index)   .    '&wiql_id_index=' .  esc_html($element->wiql_id_index)   . '&queryid=' . esc_html($element->queryid) . "&tab=" . esc_html($tab)  . '">';
 			echo esc_html($element->xaxis_field) . '</td>';
 			
 #			echo '<td style="width: 50px; border: 1px solid black;">' ;
