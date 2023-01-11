@@ -54,8 +54,8 @@ function devops_custom_cmp($a, $b) {
 		$vb =  count($custom_sort_array) +1;
 	}
 	if ($turn_on_debug == 1) {
-		print "<!-- Debug: a: " . $flda . " -- " . $va . " -->\n";
-		print "<!-- Debug: b: " . $fldb . " -- " . $vb . " -->\n";
+		print "<!-- Debug: a: " . esc_html($flda) . " -- " . esc_html($va) . " -->\n";
+		print "<!-- Debug: b: " . esc_html($fldb) . " -- " . esc_html($vb) . " -->\n";
 	}
 	
 	if ($va == $vb)  // sort on value - just incase there are multiple undefined
@@ -75,10 +75,9 @@ function wp_devops_wiql($atts = [], $content = null) {
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
 
+	# this is done b/c sometimes systems don't let plugins include css style sheets in the code 
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ';
-	
 	print("\n");
-
 	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css';
 	$css_open = fopen($css_file, "r");
 	$css_data = fread($css_open, filesize($css_file));
@@ -122,7 +121,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 		$sort = "";
 	
 	if ($turn_on_debug == 1) 
-		print "<!-- debug: sort value is: " . $sort . "-->\n";
+		print "<!-- debug: sort value is: " . esc_html($sort) . "-->\n";
 
 	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
 	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ' . "\n";
@@ -178,7 +177,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	if ($turn_on_debug == 1) {
 		print "<!-- debug: \n";
-		print "json_string is: " . $json_string . "\n";
+		print "json_string is: " . esc_html($json_string) . "\n";
 		print "curl_exec returned: ";
 		print_r($data);
 		print "\n";
@@ -190,7 +189,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$workitems = (isset( $myjson->{'workItems'} ) ? $myjson->{'workItems'} : '') ;
 	if ($workitems == '') {
 		print "<PRE>ERROR\n";
-		print "Wiql string is:" . $Wiql . "\n";
+		print "Wiql string is:" . esc_html($Wiql) . "\n";
 		print "Json return is:" ;
 		print_r($myjson);
 		print "</PRE>";
@@ -282,7 +281,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	// At this point we want to sort the object if the sort option is present
 	if (strlen($sort) > 0) {
 			if ($turn_on_debug == 1) 
-				print("<!-- Debug sort: " . $sort . " -->\n");
+				print("<!-- Debug sort: " . esc_html($sort) . " -->\n");
 			$has_question_mark = strpos($sort, "?");
 			if ($has_question_mark != FALSE) {
 				// means we have a custom sort
@@ -319,7 +318,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 		else {
 			$IterationPath = (isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : "not set") ;
 			if ($turn_on_debug == 1) 
-				print "<!-- debugging IterationPath " .  $IterationPath . "-->\n";
+				print "<!-- debugging IterationPath " .  esc_html($IterationPath) . "-->\n";
 			if ($IterationPath == $wp_devops_setup->project ) {
 				$skip_for_epic = 0;
 				if ($turn_on_debug == 1) 
@@ -355,20 +354,20 @@ function wp_devops_wiql($atts = [], $content = null) {
 			print ("<script>\n") ;
 			$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
 			$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-			print "var Detail_" . $x . "_0 = \"" . $sprint_detail . '";' . "\n";
+			print "var Detail_" . esc_html($x) . "_0 = \"" . esc_html($sprint_detail) . '";' . "\n";
 			if(strlen($workitem_Title) > 50)
-				print 'var DetailTitle_' . $x . '_0 = "' . substr($workitem_Title, 0, 40) . '...";' . "\n";
+				print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html(substr($workitem_Title, 0, 40)) . '...";' . "\n";
 			else
-				print 'var DetailTitle_' . $x . '_0 = "' . $workitem_Title . '";' . "\n";
+				print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html($workitem_Title) . '";' . "\n";
 			print ("</script>\n") ;
 					
 			// This does the start of each row, we want a line at the top execpt for the last row we need 2 lines, top and bottom
 			if ( $x == ($sizeof -1))  {// last row need top and bottom line
 				print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
-				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
+				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . esc_html($x) . ".0</td>");
 			} else {
 				print '<tr style="background-color:#FFC409; border-top: 1px solid black;">' . "\n";	
-				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden; ">' . $x . ".0</td>");
+				print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden; ">' . esc_html($x) . ".0</td>");
 			}
 	
 			
@@ -382,8 +381,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 						$do_col_span = $do_col_span + 1;
 						print "</tr>\n<tr >";
 						print('<td style="width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
-						print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
-							substr($HeaderFields[$y], 1) . ':&nbsp</B>';
+						print '<td colspan="' . esc_html(( $FieldArraySize - $count_pipe)) . '" style="background-color:White; vertical-align: top;" ><B>' . 
+							esc_html(substr($HeaderFields[$y], 1)) . ':&nbsp</B>';
 					}
 					// okay at this point we will check to see if we have a question mark
 					// if we do we will take the first field and if there is something there
@@ -428,15 +427,15 @@ function wp_devops_wiql($atts = [], $content = null) {
 					}	
 				}
 				if ($do_col_span > 0) {
-					print $CellValue . "</td>";
+					print esc_html($CellValue) . "</td>";
 					for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
 							print '<td style="display: none"></td>';
 					}
 				} else {		
-					print '<td style="' . $FieldStyle[$y] . '; background-color:White; vertical-align: top;">' ;
+					print '<td style="' . esc_html($FieldStyle[$y]) . '; background-color:White; vertical-align: top;">' ;
 					$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
 					print $div_value;
-					print $CellValue ;		
+					print esc_html($CellValue) ;		
 					print ("</div>\n");					
 					print "</td>";
 				}
@@ -459,7 +458,7 @@ print'
 	<script>
 
 (function() {
-	$("#' . $tableid . '").dataTable({});
+	$("#' . esc_html($tableid) . '").dataTable({});
 	}
 )(jQuery);
 </script>
@@ -714,7 +713,7 @@ li.extra {
 		$to_old_to_show = 0;
 
 		if ($turn_on_debug == 1)  {
-			print "/* -- Debugging:sprint_name: " . $sprint_name . " */\n";
+			print "/* -- Debugging:sprint_name: " . esc_html($sprint_name) . " */\n";
 			print "/* -- Debugging:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
 			print "/* -- Debugging:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
 			print "/* -- Debugging:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
@@ -725,10 +724,10 @@ li.extra {
 		$diff_str = date_diff($cur_day_str, $sprint_str);
 		$diff_strday = $diff_str->format("%R%a");
 		if ($turn_on_debug == 1) 
-			print "/* -- Debugging:diff_strday: " . $diff_strday . " */ \n";
+			print "/* -- Debugging:diff_strday: " . esc_html($diff_strday) . " */ \n";
 		$graph_start = intdiv($diff_strday ,$days_per_column );
 		if ($turn_on_debug == 1) 
-			print "/* -- Debugging:graph_start: " . $graph_start . " */ \n";
+			print "/* -- Debugging:graph_start: " . esc_html($graph_start) . " */ \n";
 		if ($graph_start <= 0) {
 			$graph_start = 1;
 			if ($turn_on_debug == 1) 
@@ -813,7 +812,7 @@ li.extra {
 		
 		print("<script>\n");
 		if ($turn_on_debug == 1) {
-			print "/* -- Debugging2:sprint name: " . $sprint_name . " */\n";
+			print "/* -- Debugging2:sprint name: " . esc_html($sprint_name) . " */\n";
 			print "/* -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " */\n";
 			print "/* -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " */\n";
 			print "/* -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
@@ -893,12 +892,12 @@ li.extra {
 	
 					if ($turn_on_debug == 1)  {
 						print "/* wp_devops_current_sprint Debugging Detail\n";
-						print "detail_id: " . $detail_id . "\n";
-						print "detail_createdDate: " . $detail_createdDate . "\n";
-						print "detail_UCFCategory: " . $detail_UCFCategory . "\n";
-						print "detail_Area: " . $detail_Area . "\n";
-						print "detail_Priority: " . $detail_Priority . "\n";
-						print "detail_ShowOnWebsite: " . $detail_ShowOnWebsite . "\n";
+						print "detail_id: " . esc_html($detail_id) . "\n";
+						print "detail_createdDate: " . esc_html($detail_createdDate) . "\n";
+						print "detail_UCFCategory: " . esc_html($detail_UCFCategory) . "\n";
+						print "detail_Area: " . esc_html($detail_Area) . "\n";
+						print "detail_Priority: " . esc_html($detail_Priority) . "\n";
+						print "detail_ShowOnWebsite: " . esc_html($detail_ShowOnWebsite) . "\n";
 						print "*/\n";	
 					}
 	
@@ -906,18 +905,18 @@ li.extra {
 					if( $detail_ShowOnWebsite == '1') {
 						$sprint_text = $sprint_text . "<div style=\\\"cursor: pointer; \\\" onclick=\\\"detail.open(" . $x . "," . $w_z . ")\\\"> ";
 						//$sprint_text = $sprint_text . "<i>" . $w_z . "-" . $detail_id . "</i> - ";
-						$sprint_text = $sprint_text . "<i>" . $detail_id . "</i> - ";
-						$sprint_text = $sprint_text . $detail_title ;
+						$sprint_text = $sprint_text . "<i>" . esc_html($detail_id) . "</i> - ";
+						$sprint_text = $sprint_text . esc_html($detail_title) ;
 						
 						$sprint_text = $sprint_text . "<br></div>";
 		
 						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
 						$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-						print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
+						print "var Detail_" . $x . "_" . $w_z . " = \"" . esc_html($sprint_detail) . '";' . "\n";
 						if(strlen($detail_title) > 50)
-							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . substr($detail_title, 0, 40) . '...";' . "\n";
+							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . esc_html(substr($detail_title, 0, 40)) . '...";' . "\n";
 						else
-							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . $detail_title . '";' . "\n";
+							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . esc_html($detail_title) . '";' . "\n";
 					}
 			}
 			print "var Text_" . $x . " = \"" . $sprint_text;
@@ -943,7 +942,7 @@ li.extra {
 			date_add($cur_day_end, $weeks);
 	
 			if ($turn_on_debug == 1) {
-				print "<!-- -- Debugging2:sprint_name: " . $sprint_name . " */\n";
+				print "<!-- -- Debugging2:sprint_name: " . esc_html($sprint_name) . " */\n";
 				print "<!-- -- Debugging2:cur_day_str: " . date_format($cur_day_str,"Y/m/d H:i:s") . " -->\n";
 				print "<!-- -- Debugging2:cur_day_end: " . date_format($cur_day_end,"Y/m/d H:i:s") . " -->\n";
 				print "<!-- -- Debugging2:end_day: " . date_format($end_day,"Y/m/d H:i:s") . " */\n";
@@ -959,7 +958,7 @@ li.extra {
 					print '<div class="chart-row-item" >' . ($display_row) . '</div>' . "\n";
 					print '<ul class="chart-row-bars"  onclick="pop.open(\'title\' , ' . $x . ')">' ;
 					print '  <li class="extra chart-li-' . $count_word[$x] . ' " >' ;
-					print "<font size=\"2\"> " . $sprint_name . "<br><font size=\"1\"> " . date_format($sprint_str, "m/d/Y") . "</font>";
+					print "<font size=\"2\"> " . esc_html($sprint_name) . "<br><font size=\"1\"> " . date_format($sprint_str, "m/d/Y") . "</font>";
 					print '</li>';
 					// now we add the popup stuff
 					print '</ul>' ;
@@ -1027,21 +1026,21 @@ $return_content =  '
 				<tbody>
 					<tr>
 						<td ><B>Area:</B></td>
-						<td >' . $area . '</td>
+						<td >' . esc_html($area) . '</td>
 					</tr>
 					<tr>
 						<td ><B>Iteration:</B></td>
-						<td >' . $iteration . '</td>
+						<td >' . esc_html($iteration) . '</td>
 					</tr>
 				</tbody>
 			</table>
 			</td>
 		</tr>
 		<tr>
-			<td colspan="3" rowspan="1" style="width:753px"><strong>' . $title . '</strong></td>
+			<td colspan="3" rowspan="1" style="width:753px"><strong>' . esc_html($title) . '</strong></td>
 		</tr>
 		<tr>
-			<td colspan="2"><B>Assignee</B>:&nbsp;' .  $assignee . '</td>
+			<td colspan="2"><B>Assignee</B>:&nbsp;' .  esc_html($assignee) . '</td>
 		</tr>
 		<tr>
 			<td colspan="2" rowspan="1" >
@@ -1051,7 +1050,7 @@ $return_content =  '
 						<td style="text-align: left"><B>Description</B></td>
 					</tr>
 					<tr>
-						<td >' .  $description . '</td>
+						<td >' .  esc_html($description) . '</td>
 					</tr>
 				</tbody>
 			</table>
@@ -1467,7 +1466,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 			if ( $sprint_to_show == $display_row) { 	
 
 				print "<CENTER>\n";
-				print "<table style='width: 100%;'><tr><td><B>Sprint ID:&nbsp;</B>" . $sprint_name . "</td><td><B>Start Date:</B>&nbsp;" . date_format($sprint_str, 'M j, Y') . 
+				print "<table style='width: 100%;'><tr><td><B>Sprint ID:&nbsp;</B>" . esc_html($sprint_name) . "</td><td><B>Start Date:</B>&nbsp;" . date_format($sprint_str, 'M j, Y') . 
 					"</td><td><B>End Date:</B>&nbsp;" .  date_format($sprint_end, 'M j, Y') . "</td></tr></table>\n";
 				print "</CENTER>";
 
@@ -1620,14 +1619,14 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, ' ', $detail_IterationPath );
 						
 						print "<!-- wp_devops_list_sprint Debugging Detail\n";
-						print "detail_id: " . $detail_id . "\n";
-						print "detail_createdDate: " . $detail_createdDate . "\n";
-						print "detail_UCFCategory: " . $detail_fields->{'Custom.Category'} . "\n";
-						print "detail_LevelofEffort: " . $detail_fields->{'Custom.LevelofEffort'} . "\n";
-						print "detail_Priority: " . $detail_Priority . "\n";
-						print "detail_ShowOnWebsite: " . $detail_ShowOnWebsite . "\n";
-						print "Custom.DisplayonWebsite: " . $detail_fields->{'Custom.DisplayonWebsite'} . "\n";
-						print "detail_id: " . $detail_id . "\n";
+						print "detail_id: " . esc_html($detail_id) . "\n";
+						print "detail_createdDate: " . esc_html($detail_createdDate) . "\n";
+						print "detail_UCFCategory: " . esc_html($detail_fields->{'Custom.Category'}) . "\n";
+						print "detail_LevelofEffort: " . esc_html($detail_fields->{'Custom.LevelofEffort'} ) . "\n";
+						print "detail_Priority: " . esc_html($detail_Priority) . "\n";
+						print "detail_ShowOnWebsite: " . esc_html($detail_ShowOnWebsite) . "\n";
+						print "Custom.DisplayonWebsite: " . esc_html($detail_fields->{'Custom.DisplayonWebsite'}) . "\n";
+						print "detail_id: " . esc_html($detail_id) . "\n";
 						
 						print "-->\n";
 						
@@ -1653,7 +1652,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 										print "</tr>\n<tr >";
 										print('<td style="background-color:White; vertical-align: top; visibility: hidden;">' . $x . "." . $do_col_span . "</td>");
 										print '<td colspan="' . ( $FieldArraySize - $count_pipe) . '" style="background-color:White; vertical-align: top;" ><B>' . 
-											substr($HeaderFields[$y], 1) . ':&nbsp</B>';
+											esc_html(substr($HeaderFields[$y], 1)) . ':&nbsp</B>';
 									}
 									// okay at this point we will check to see if we have a question mark
 									// if we do we will take the first field and if there is something there
@@ -1698,12 +1697,12 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 									}	
 								}
 								if ($do_col_span > 0) {
-									print $CellValue . "</td>";
+									print esc_html($CellValue) . "</td>";
 									for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
 											print '<td style="display: none"></td>';
 									}
 								}else
-									print '<td style="background-color:White; vertical-align: top;">' . $CellValue . "</td>";
+									print '<td style="background-color:White; vertical-align: top;">' . esc_html($CellValue) . "</td>";
 							}
 							print "</tr>\n";
 						}
