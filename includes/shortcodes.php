@@ -354,7 +354,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 			print ("<script>\n") ;
 			$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
 			$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-			print "var Detail_" . esc_html($x) . "_0 = \"" . esc_html($sprint_detail) . '";' . "\n";
+			print "var Detail_" . esc_html($x) . "_0 = \"" . $sprint_detail . '";' . "\n";
 			if(strlen($workitem_Title) > 50)
 				print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html(substr($workitem_Title, 0, 40)) . '...";' . "\n";
 			else
@@ -912,7 +912,7 @@ li.extra {
 		
 						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
 						$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
-						print "var Detail_" . $x . "_" . $w_z . " = \"" . esc_html($sprint_detail) . '";' . "\n";
+						print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
 						if(strlen($detail_title) > 50)
 							print "var DetailTitle_" . $x . "_" . $w_z . " = \"" . esc_html(substr($detail_title, 0, 40)) . '...";' . "\n";
 						else
@@ -1050,7 +1050,7 @@ $return_content =  '
 						<td style="text-align: left"><B>Description</B></td>
 					</tr>
 					<tr>
-						<td >' .  esc_html($description) . '</td>
+						<td >' .  $description . '</td>
 					</tr>
 				</tbody>
 			</table>
