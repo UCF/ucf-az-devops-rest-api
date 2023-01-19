@@ -29,7 +29,7 @@ function ucf_devops_rest_api(){
 		header_fields	text,
 		field_style		text,
 		char_count		text,
-	PRIMARY KEY(wiql_index, entry_index )		
+	PRIMARY KEY  (wiql_index, entry_index )		
 	)";
 	dbDelta( $sql );
 	//$wpdb->show_errors();
@@ -42,7 +42,8 @@ function ucf_devops_rest_api(){
 		description		varchar(128),
 		organization	varchar(128),
 		project			varchar(128),
-	PRIMARY KEY(entry_index)		
+		debugflag			varchar(1),
+	PRIMARY KEY  (entry_index)		
 	)";
 	dbDelta( $sql );
 	//$wpdb->show_errors();
@@ -56,7 +57,7 @@ function ucf_devops_rest_api(){
 		queryname		varchar(128),
 		xaxis_field		varchar(128),
 		yaxis_field		varchar(128),
-	PRIMARY KEY(wiql_id_index, entry_index, queryid)		
+	PRIMARY KEY  (wiql_id_index, entry_index, queryid)		
 	)";
 	dbDelta( $sql );
 	//$wpdb->show_errors();

@@ -130,15 +130,15 @@ function wp_devops_wiql($atts = [], $content = null) {
 	$tableid = "table_" . rand();  //this allows my code be on the page more than once
 	//$tableid = "table_1";
 	
-	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization); //"UCF-Operations";  // this is the organization name from Azure DevOps - needs to be html escaped
-	$Project = str_replace(" ", "%20", $wp_devops_setup->project); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
-	$PAT= $wp_devops_setup->pat_token; //"gx6jvhpecqdaneevel7owmtr7yd5ja5p675t3hwnbamvmgkuyq7q"; // This is currently my Personal Access Token. This needs to be changed
-	$Wiql = $wp_devops_return->wiql; 
+	$Organization = str_replace(" ", "%20", sanitize_text_field($wp_devops_setup->organization)); //"UCF-Operations";  // this is the organization name from Azure DevOps - needs to be html escaped
+	$Project = str_replace(" ", "%20", sanitize_text_field($wp_devops_setup->project)); //"Workday%20Operations"; // this is the project name from Azure DevOps - needs to be html escaped
+	$PAT= sanitize_text_field($wp_devops_setup->pat_token); //"gx6jvhpecqdaneevel7owmtr7yd5ja5p675t3hwnbamvmgkuyq7q"; // This is currently my Personal Access Token. This needs to be changed
+	$Wiql = sanitize_text_field($wp_devops_return->wiql); 
 	//'"Select [System.Id] from WorkItems where [Custom.DisplayonWebsite] = True and [System.State] = \"Done\" "';
-	$FieldsToQuery = explode(",",$wp_devops_return->fields_to_query);
-	$HeaderFields = explode(",",$wp_devops_return->header_fields);
-	$FieldStyle = explode(",",$wp_devops_return->field_style);
-	$CharCount = explode(",",$wp_devops_return->char_count);
+	$FieldsToQuery = explode(",",sanitize_text_field($wp_devops_return->fields_to_query));
+	$HeaderFields = explode(",",sanitize_text_field($wp_devops_return->header_fields));
+	$FieldStyle = explode(",",sanitize_text_field($wp_devops_return->field_style));
+	$CharCount = explode(",",sanitize_text_field($wp_devops_return->char_count));
 
 //	$FieldsToQuery = array("Id", "System.Title", "Microsoft.VSTS.Common.Resolution","System.WorkItemType",  "Custom.UCFCategory", "Custom.ImpactedAudience", "Microsoft.VSTS.Common.Priority", "System.CreatedDate" ,"Microsoft.VSTS.Common.ClosedDate");
 //	$HeaderFields = array("ID", "Title", "Resolution", "Type", "Category", "Impacted Audience", "Priority",  "Created Date", "Date Closed");
@@ -226,8 +226,8 @@ function wp_devops_wiql($atts = [], $content = null) {
 	// okay we will collect all the items first, that way if we have a custom sort we are ready to handle that
 	//
 	for($x = 0; $x < $sizeof; $x++){
-		$workitem_id = $workitems[$x]->{'id'}; // not used maybe delete?
-		$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
+		$workitem_id = sanitize_text_field($workitems[$x]->{'id'}); // not used maybe delete?
+		#$workitem_url = $workitems[$x]->{'url'}; // this url didn't return all the info I was looking for
 		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
 		
 		// This gets all the data elements of the devops id that the query returned
@@ -1616,7 +1616,11 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 						$detail_LevelofEffort = isset($detail_fields->{'Custom.LevelofEffort'}) ? $detail_fields->{'Custom.LevelofEffort'} : '' ;
 						$detail_EstimatedCompletion = isset($detail_fields->{'Custom.EstimatedCompletion'}) ? $detail_fields->{'Custom.EstimatedCompletion'} : '' ;
 						$detail_ClosedDate = isset($detail_fields->{'Microsoft.VSTS.Common.ClosedDate'}) ? $detail_fields->{'Microsoft.VSTS.Common.ClosedDate'} : '' ;
-						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, ' ', $detail_IterationPath );
+						if ($ParentID != False)
+							$CellValue = $ParentID;
+						else
+							$CellValue = $detail_id;
+						$detail_show_workitem = show_workitem($CellValue, $detail_title, $detail_assignee, '', $detail_descr, ' ', $detail_IterationPath );
 						
 						print "<!-- wp_devops_list_sprint Debugging Detail\n";
 						print "detail_id: " . esc_html($detail_id) . "\n";
@@ -1631,7 +1635,18 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 						print "-->\n";
 						
 						if ( $detail_ShowOnWebsite == '1') { // this is our flag to only show those items that are flagged.
+// needs work for drill down
+							print("<script>\n");
+							$new_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+							print "var CurDetail_" . $x . "_" . $w_z . " = \"" . $new_detail . '";' . "\n";
+							if(strlen($detail_title) > 50)
+								print "var CurDetailTitle_" . $x . "_" . $w_z . " = \"" . esc_html(substr($detail_title, 0, 40)) . '...";' . "\n";
+							else
+								print "var CurDetailTitle_" . $x . "_" . $w_z . " = \"" . esc_html($detail_title) . '";' . "\n";
+							print("</script>\n");
+							
 							if ( $x == ($sizeof -1))  {// last row need top and bottom line
+							
 								print '<tr style="background-color:#FFC409; border-top: 1px solid black; border-bottom: 1px solid black;">' . "\n";
 								print('<td style="width: 0px; background-color:White; vertical-align: top; visibility: hidden;">' . $x . ".0</td>");
 							} else {
@@ -1697,14 +1712,22 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 									}	
 								}
 								if ($do_col_span > 0) {
-									print esc_html($CellValue) . "</td>";
+									print '<div style="cursor: pointer; " onclick="pop.sprint(' . $x . "," . $w_z . ')"> ';
+									print esc_html($CellValue);
+									print "</div>";
+									print "</td>";
 									for ($yy = 1; $yy < ($FieldArraySize - $count_pipe) ; $yy++) {
 											print '<td style="display: none"></td>';
 									}
+									
 								}else
-									print '<td style="background-color:White; vertical-align: top;">' . esc_html($CellValue) . "</td>";
-							}
-							print "</tr>\n";
+									print '<td style="background-color:White; vertical-align: top;">';
+									print '<div style="cursor: pointer; " onclick="pop.sprint(' . $x . "," . $w_z . ')"> ';
+									print esc_html($CellValue);
+									print "</div>";
+									print "</td>";
+							}							
+							print "</tr>\n";							
 						}
 					}
 		

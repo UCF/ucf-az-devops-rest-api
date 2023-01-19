@@ -82,12 +82,13 @@ Function ucf_devops_rest_manage(){
 		$ucf_devops_description = sanitize_text_field($_POST['description']);
 		$ucf_devops_organization = sanitize_text_field($_POST['organization']);
 		$ucf_devops_project = sanitize_text_field($_POST['project']);
+		$ucf_debug_flag = sanitize_text_field($_POST['debug']);
 		
 		$sql = sprintf("update " . $wpdb->base_prefix . "ucf_devops_setup " . 
 			"set pat_token='%s', description='%s',organization='%s'," .
-			"project='%s' " .
+			"project='%s', debugflag='%s' " .
 			"where entry_index=%d", $ucf_devops_pat_token, $ucf_devops_description, $ucf_devops_organization, 
-			$ucf_devops_project, $tablid);
+			$ucf_devops_project, $ucf_debug_flag, $tablid);
 
 		$return = $wpdb->query($sql );
 		$wpdb->show_errors();
@@ -171,7 +172,7 @@ Function ucf_devops_rest_manage(){
 		$wpdb->flush();
 	} else if (isset($_POST['updqueryfields'])) {
 		$ucf_xaxis_field_ID = sanitize_text_field($_POST['xaxis_field_ID']);
-		$ucf_yaxis_field_ID  = sanitize_text_field($_POST['yaxis_field_ID']);
+		//not used anymore $ucf_yaxis_field_ID  = sanitize_text_field($_POST['yaxis_field_ID']);
 		$ucf_queryid  = sanitize_text_field($_POST['queryid']);
 		$ucf_wiql_id_index  = sanitize_text_field($_POST['wiql_id_index']);
 		
@@ -447,7 +448,7 @@ $('.ok').on('click', function(e){
 		print '</h3>'; 
 
 		$sql = "select entry_index,pat_token," . 
-				"description,organization,project from " . $wpdb->base_prefix . "ucf_devops_setup where entry_index = " . $tablid ;
+				"description,organization,project,debugflag from " . $wpdb->base_prefix . "ucf_devops_setup where entry_index = " . $tablid ;
 		$eav_tblinfo = $wpdb->get_row($sql);
 		
 		echo '<form action="" method="post">';
@@ -463,8 +464,18 @@ $('.ok').on('click', function(e){
 		
 		echo '<tr><td><label for="seachlabel">Project:</label></td><td>';
 		echo '<input type="text" id="project" name="project" cols="100" value="' . esc_html($eav_tblinfo->project) . '"></td></tr><p>';
-
-
+		
+		if (trim(esc_html($eav_tblinfo->debugflag)) == '') 
+			$dbflg = "(blank)";
+		else
+			$dbflg = esc_html($eav_tblinfo->debugflag);
+		
+		echo '<tr><td><label for="seachlabel">Debug (Current:' . $dbflg . '):</label></td><td>';
+		echo '<select name="debug" id="debug"> ';
+			echo '<option value="N">N</option>';
+			echo '<option value="Y">Y</option>';
+		echo '</select>';
+		
 		print '</table>';
 
 		

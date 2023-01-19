@@ -25,7 +25,11 @@
   transform: translate(-50%, -50%);
 
   /* (B2) DIMENSIONS */
-  min-width: 320px; max-width: 800px;
+  /* min-width: 320px; max-width: 800px; */
+  
+  overflow-y: scroll; /* Show vertical scrollbar */
+  overflow-x: scroll; /* Show horizontal scrollbar */
+  background: #fff;  /* added 1/19/2023 */
 }
 
 /* (C) TITLE + TEXT + CLOSE BUTTON  UCF Gold color - #FFC409 */
@@ -42,10 +46,6 @@
 	top: 5px; right: 5px; 
 	cursor: pointer;
 } 
-
-
-
-
 
 /* (A) detailUP WRAPPER */
 #detailwrap, #detailwrap * { box-sizing: border-box; }
