@@ -1762,6 +1762,228 @@ function wp_devops_list_sprint($atts = [], $content = null) {
     return $content;
 }
 
+function wp_devops_query_pretty($atts = [], $content = null) {
+	global $wpdb;
+	global $devops_sort_field;
+	global $custom_sort_array;
+	global $turn_on_debug;
+	 
+	 
+	$turn_on_debug = 0 ;
+	ob_start(); // this allows me to use echo instead of using concat all strings
+	$wiql_id_index =  sanitize_text_field($atts['wiql_id_index']);
+	
+	$skip_devops_settings_form = 1;	
+	
+	$tableid = "table_" . rand();  //this allows my code be on the page more than once
+	
+	//according to Jim Barnes remove for now - but I am still keeping it b/c it seems to work.
+	print '<link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" /> ' . "\n";
+	
+	$sql_setup = "select a.entry_index, a.pat_token," . 
+		"a.description, a.organization,a.project, b.queryname, b.queryid from " . 
+	$wpdb->base_prefix . "ucf_devops_setup a, " . $wpdb->base_prefix . "ucf_devops_query b  where a.entry_index = b.entry_index and b.wiql_id_index = " . $wiql_id_index;
+	$wp_devops_setup = $wpdb->get_row($sql_setup);
+	if ($wp_devops_setup == false) {
+		$wpdb->show_errors();
+		$wpdb->flush();
+	}
+	$Organization = str_replace(" ", "%20", $wp_devops_setup->organization);
+	$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
+	$ucf_devops_pat_token = $wp_devops_setup->pat_token;
+	
+
+	$queryid = $wp_devops_setup->queryid;    //"392fff89-3500-4880-a925-620650238fd5";
+	$queryname = $wp_devops_setup->queryname;
+	
+	if ($turn_on_debug == 1) 
+			print "<!-- queryid: " . esc_html($queryid) . "-->\n";
+	
+
+	
+	$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/wiql/" .  $queryid  ."?api-version=5.1";
+	$curl = curl_init();
+	
+
+	curl_setopt($curl, CURLOPT_URL, $url);
+	curl_setopt($curl, CURLOPT_POST, FALSE);
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+	curl_setopt($curl, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token );
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true );
+	$data = curl_exec($curl);
+	//curl_close($curl);
+
+	$myjson  = json_decode($data , false );
+	
+	$ucf_workItems = $myjson->{'workItems'};
+	
+	if ($turn_on_debug == 1) {
+		print "<!-- <PRE>";
+		print_r($ucf_workItems);
+		print "</PRE> -->";
+	}
+	
+	$ucf_count = count($ucf_workItems);
+	if ($turn_on_debug == 1) 
+			print "<!-- ucf_count: " . esc_html($ucf_count) . "-->\n";
+	
+	$css_file = ABSPATH . '/wp-content/plugins/ucf-az-devops-rest-api/includes/css/popup.css';
+	$css_open = fopen($css_file, "r");
+	$css_data = fread($css_open, filesize($css_file));
+	fclose($css_open);
+	print( "<style>\n" . $css_data . "\n</style>\n");
+	
+	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
+	print "    <thead>\n";
+	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
+	//print '<th data-orderable="false">&nbsp;</th>';
+	print '<th data-orderable="false"></th>';
+	print '<th data-orderable="false"></th>' . "\n";
+	print "        </tr>\n";
+	print "    </thead>\n";
+	print "    <tbody>\n";
+	
+	// so myjson has all the id's from the query.  We will loop through all the return id's
+	
+	// okay we will collect all the items first, that way if we have a custom sort we are ready to handle that
+	//
+	
+	for($x = 0; $x < $ucf_count; $x++){
+		
+		$workitem_id = sanitize_text_field($ucf_workItems[$x]->{'id'}); // not used maybe delete?
+		#$workitem_url = $ucf_workItems[$x]->{'url'}; // this url didn't return all the info I was looking for
+		$workitem_url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/workitems?ids=" . $workitem_id . '&$expand=all&api-version=6.0';
+		
+		
+	
+		// This gets all the data elements of the devops id that the query returned
+		$item_url = $workitem_url;
+		$curl_workitem = curl_init();
+		curl_setopt($curl_workitem, CURLOPT_URL, $workitem_url);
+		curl_setopt($curl_workitem, CURLOPT_POST, 0);  // this is a GET
+		curl_setopt($curl_workitem, CURLOPT_USERPWD, ':' . $ucf_devops_pat_token);
+		curl_setopt($curl_workitem, CURLOPT_RETURNTRANSFER, true );
+		$item_data = curl_exec($curl_workitem);
+	
+		curl_close($curl_workitem);
+		
+		$item_decode  = json_decode($item_data , false );
+		$item_json = $item_decode->{'value'}[0]; // trasverse json structure
+		
+		
+		//$item_json = $item_decode[$x];
+		$workitem_id = $ucf_workItems[$x]->{'id'}; // not used maybe delete?
+		$workitem_url = $ucf_workItems[$x]->{'url'}; // this url didn't return all the info I was looking for
+		
+		//print "<PRE> id:" . $item_json->{'fields'}->{'System.Description'} . "</PRE>";
+
+
+		if (isset($item_json->{'fields'}->{'System.AssignedTo'})) {
+			// have an assignee
+			$stdClass_object = $item_json->{'fields'}->{'System.AssignedTo'};
+			$workitem_assignee = $stdClass_object ->{'displayName'};
+		}else {
+			$workitem_assignee = "[Unassigned]";
+		}
+		$workitem_descr = isset($item_json->{'fields'}->{'System.Description'}  ) ? $item_json->{'fields'}->{'System.Description'} : '';
+		if($workitem_descr == '')
+			$workitem_descr = '[No Description Entered]';
+		
+		$display_descr = $workitem_descr;
+		
+		$workitem_Area = isset( $item_json->{'fields'}->{'Custom.WebsiteAreas'} ) ? $item_json->{'fields'}->{'Custom.WebsiteAreas'} : '';
+		$workitem_Title = isset( $item_json->{'fields'}->{'System.Title'} ) ? $item_json->{'fields'}->{'System.Title'} : '';
+		$workitem_IterationPath = isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : '';
+		
+		$workitem_Category  =	isset($item_json->{'fields'}->{'Custom.Category'}  ) ? $item_json->{'fields'}->{'Custom.Category'}: '';
+		$workitem_Priority = 	isset($item_json->{'fields'}->{'Microsoft.VSTS.Common.Priority'}  ) ? $item_json->{'fields'}->{'Microsoft.VSTS.Common.Priority'}: '';
+		$workitem_AreaPath = 	isset($item_json->{'fields'}->{'System.AreaPath'}  ) ? $item_json->{'fields'}->{'System.AreaPath'} : '';
+		$workitem_CreatedDate = isset($item_json->{'fields'}->{'System.CreatedDate'}  ) ? $item_json->{'fields'}->{'System.CreatedDate'}: '';
+		$workitem_CreatedBy = 	isset($item_json->{'fields'}->{'System.CreatedBy'}->{'displayName'}  ) ? $item_json->{'fields'}->{'System.CreatedBy'}->{'displayName'} : '';
+		
+		
+		switch($workitem_Priority) {
+			case "1":
+				$workitem_Priority = "Critical";
+				break;
+			case "2":
+				$workitem_Priority = "High";
+				break;
+			case "3":
+				$workitem_Priority = "Med";
+				break;
+			case "4":
+				$workitem_Priority = "Low";
+				break;
+		}
+		
+		print '<tr  style="width: 1px; background-color:White"; >';
+		
+
+		//print('<td style="width: 1px; vertical-align: top; visibility: hidden;">' . esc_html($x) . ".0</td>");
+		
+		print ("<script>\n") ;
+		$detail_show_workitem = show_workitem($workitem_id, $workitem_Title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
+		$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
+		print "var Detail_" . esc_html($x) . "_0 = \"" . $sprint_detail . '";' . "\n";
+		if(strlen($workitem_Title) > 50)
+			print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html(substr($workitem_Title, 0, 40)) . '...";' . "\n";
+		else
+			print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html($workitem_Title) . '";' . "\n";
+		print ("</script>\n") ;
+		
+		print '<td style="vertical-align:top"; >' . $workitem_id . "</td>";
+		print "<td>";
+			$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
+			print $div_value;
+			print "<H2>" . esc_html($workitem_Title) . "</H2>";
+			print "<b>Date: " . esc_html(substr($workitem_CreatedDate, 0, 10)) .  "</b>";
+			print '<br><div style="overflow:hidden; width:500px; max-height:150px; vertical-align:top; ">' . $display_descr . "</div>" ;
+			print "<br>By ". esc_html($workitem_CreatedBy);
+			print "<br>Category: " . esc_html($workitem_Category);
+			print "</dev>";
+			print "<hr>";
+					
+		print ("</td>");
+		print ("</tr>\n");
+		
+	}
+	print "</tbody>";
+	print "</table>";
+	print "<hr>";
+
+
+	
+//print '<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>';
+print '<script type="text/javascript" charset="utf8" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>';
+
+print'
+<script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>';
+
+// this is what is needed for the jquery datatables to work.
+print'
+	<script>
+
+(function() {
+	$("#' . esc_html($tableid) . '").dataTable({
+	})(jQuery);
+</script>
+';
+	
+	$js_file = str_replace('\\', '/', ABSPATH) . 'wp-content/plugins/ucf-az-devops-rest-api/includes/js/popup.js';
+	$js_open = fopen($js_file, "r");
+	$js_data = fread($js_open, filesize($js_file));
+	fclose($js_open);
+	print "<script>" . $js_data . "</script>";
+	
+	$content = ob_get_contents();
+	ob_end_clean();
+    return $content;
+}
+
+
+
+
 add_shortcode ('wp_devops_list_sprint','wp_devops_list_sprint');
 
 add_shortcode ('wp_devops_wiql','wp_devops_wiql');
@@ -1769,5 +1991,6 @@ add_shortcode ('wp_devops_current_sprint','wp_devops_current_sprint');
 add_shortcode ('wp_devops_tab_start','wp_devops_tab_start');
 add_shortcode ('wp_devops_tab_end','wp_devops_tab_end');
 add_shortcode ('wp_devops_query' , 'wp_devops_query');
+add_shortcode ('wp_devops_query_pretty' , 'wp_devops_query_pretty');
 
 ?>
