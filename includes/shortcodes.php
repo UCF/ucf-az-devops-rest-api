@@ -1837,7 +1837,7 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	//print '<th data-orderable="false">&nbsp;</th>';
-	print '<th data-orderable="false"></th>';
+	print '<th data-orderable="false" style="width:100px;"></th>';
 	print '<th data-orderable="false"></th>' . "\n";
 	print "        </tr>\n";
 	print "    </thead>\n";
@@ -1932,7 +1932,7 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 			print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html($workitem_Title) . '";' . "\n";
 		print ("</script>\n") ;
 		
-		print '<td style="vertical-align:top"; >' . $workitem_id . "</td>";
+		print '<td style="vertical-align:top;">' . $workitem_id . "</td>";
 		print "<td>";
 			$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
 			print $div_value;
