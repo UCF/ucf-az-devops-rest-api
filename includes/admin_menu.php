@@ -348,7 +348,8 @@ Function ucf_devops_rest_manage(){
 		$Organization = str_replace(" ", "%20", $wp_devops_setup->organization);
 		$Project = str_replace(" ", "%20", $wp_devops_setup->project); 
 		$PAT = $wp_devops_setup->pat_token;
-		$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/queries?\$depth=2&api-version=6.0";
+		// note it appears that depth is between 0 to 2
+		$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/queries?\$expand=all&\$depth=2&api-version=6.0";
 	
 		$curl = curl_init();
 	
@@ -360,8 +361,13 @@ Function ucf_devops_rest_manage(){
 		$data = curl_exec($curl);
 		curl_close($curl);
 	
-		//print "<PRE>";
 		$myjson  = json_decode($data , false );
+		
+		//print "<PRE>";
+		//print_r($myjson);
+		//print "</PRE>";
+		
+		
 		print '<style>
 			table, th, td {
 				border:1px solid black;
@@ -377,22 +383,42 @@ Function ucf_devops_rest_manage(){
 		for ($q_c1 = 0; $q_c1 < $q1_array_size; $q_c1++) {
 			$l1 = $q1_array[$q_c1];
 			//print_r($l1);
-
-			$l2 = $l1->{'children'};
-			$l2_size = count($l2);
-			//print_r($l2);
-			for ($q_c2 = 0; $q_c2 < $l2_size; $q_c2++) {
-				$l3 = $l2[$q_c2];
-				//$l3_size = count($l3);
-				//print("\n\ndata is:");
-				//print_r($l3);
-				$l3_name = $l3->{'name'};
-				$l3_id = $l3->{'id'};
-				$l3_createddate = $l3->{'createdDate'};
-				print '<tr >';
-				print "<td>" . $l3_id . "</td><td>" . $l3_name . "</td><td>" . $l3_createddate . "</td>";
-				print "</tr>\n";
-				$row_hold = $row_hold + 1;
+			//print "<PRE>";
+			//print_r($l1);
+			//print "</PRE>";
+		
+			if (isset($l1->{'children'})) {
+				$l2 = $l1->{'children'};
+				$l2_size = count($l2);
+				//print_r($l2);
+				for ($q_c2 = 0; $q_c2 < $l2_size; $q_c2++) {
+					$l3 = $l2[$q_c2];
+					
+					if (isset($l3->{'children'})) {
+						$l4 = $l3->{'children'};
+						$l4_size = count($l4);
+						for($q_c4 = 0; $q_c4 < $l4_size; $q_c4++) {
+							$l4_name = $l4[$q_c4]->{'name'};
+							$l4_id = $l4[$q_c4]->{'id'};
+							$l4_createddate = $l4[$q_c4]->{'createdDate'};
+							print '<tr >';
+							print "<td>" . $l4_id . "</td><td>" . $l4_name . "</td><td>" . $l4_createddate . "</td>";
+							print "</tr>\n";
+							$row_hold = $row_hold + 1;
+						}
+					}else{
+						//$l3_size = count($l3);
+						//print("\n\ndata is:");
+						//print_r($l3);
+						$l3_name = $l3->{'name'};
+						$l3_id = $l3->{'id'};
+						$l3_createddate = $l3->{'createdDate'};
+						print '<tr >';
+						print "<td>" . $l3_id . "</td><td>" . $l3_name . "</td><td>" . $l3_createddate . "</td>";
+						print "</tr>\n";
+						$row_hold = $row_hold + 1;
+					}
+				}
 			}
 		}
 		print("</table><P>\n");	

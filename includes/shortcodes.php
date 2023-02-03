@@ -1172,14 +1172,15 @@ function wp_devops_query($atts = [], $content = null) {
 		$devops_ytitle = "";
 	
 	/* This allows us to use a php function to translate the value */
-	if (isset($atts['func']))
-		$devops_func = sanitize_text_field($atts['func']);
+	if (isset($atts['truncate']))
+		$devops_truncate = sanitize_text_field($atts['truncate']);
 	else
-		$devops_func = "";
+		$devops_truncate = "";
 	
 	$skip_devops_settings_form = 1;	
 	
 	$barColors = array("#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC", "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499", "#22AA99", "#AAAA11", "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#651067");
+	$barColorsSize = count($barColors);
 
 
 	$sql_setup = "select a.entry_index, a.pat_token," . 
@@ -1253,8 +1254,11 @@ function wp_devops_query($atts = [], $content = null) {
 		if (isset($thefields->{$wiql_fieldname}))
 			$thevalue = strval($thefields->{$wiql_fieldname});
 		else
-			$thevalue = "(blank}";
+			$thevalue = "(Blank)";
 		
+		// check if we need to truncate the value (like maybe a date)
+		if ($devops_truncate != "") 
+			$thevalue = substr($thevalue, 0, $devops_truncate);
 		//print "<PRE>thevalue is:" . $thevalue . "</PRE>\n";
 		
 		$srch = array_search($thevalue, $index_array, true);
@@ -1296,9 +1300,13 @@ function wp_devops_query($atts = [], $content = null) {
 	}
 	print '];' . "\n";
 	
+	$barindex = 0;
 	print '	var barColors = [';
 	for($i = 0; $i < $acount; $i++) {
-		print '"' . $barColors[$i] . '"';
+		if ($barindex >= $barColorsSize)
+			$barindex = 0;
+		print '"' . $barColors[$barindex] . '"';
+		$barindex = $barindex + 1;
 		if ($i < ( $acount - 1) )
 			print ',';
 	}
