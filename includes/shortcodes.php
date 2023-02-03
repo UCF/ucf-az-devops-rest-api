@@ -169,7 +169,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	//check if we want to limit the number returned
 	if ($top != '') 
-		$url = $url . '$top=' . $top;
+		$url = $url . '&$top=' . $top;
 	
 	$curl = curl_init(); // we use curl to get the results - easy
 	
