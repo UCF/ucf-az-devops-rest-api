@@ -11,7 +11,7 @@
 # sorting function
 $devops_sort_field = "";
 $custom_sort_array = array();
-$turn_on_debug = 1;
+$turn_on_debug = 0;
 
 
 function devops_cmp($a, $b) {
@@ -23,7 +23,7 @@ function devops_cmp($a, $b) {
 	$flda = trim($a->{'fields'}->{$devops_sort_field});
 	$fldb = trim($b->{'fields'}->{$devops_sort_field});
 	if ($turn_on_debug == 1) 
-		print "<!-- Debug: a: " . $flda . " -->\n";
+		print "<!-- Debug: devops_cmp a: " . $flda . " -- b: " . $fldb . " -- strcmp:" . strcmp($flda , $fldb) . " -->\n";
     return strcmp($flda , $fldb);
 
 }
@@ -71,7 +71,7 @@ function wp_devops_wiql($atts = [], $content = null) {
 	global $custom_sort_array;
 	global $turn_on_debug;
 	 
-	 
+	$turn_on_debug = 1;
 	ob_start(); // this allows me to use echo instead of using concat all strings
 
 
@@ -120,6 +120,11 @@ function wp_devops_wiql($atts = [], $content = null) {
 	else
 		$sort = "";
 	
+	if(isset($atts['top']))
+		$top = sanitize_text_field($atts['top']);
+	else
+		$top = "";
+	
 	if ($turn_on_debug == 1) 
 		print "<!-- debug: sort value is: " . esc_html($sort) . "-->\n";
 
@@ -162,6 +167,10 @@ function wp_devops_wiql($atts = [], $content = null) {
 	// This is the REST url for the Wiql API
 	$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/wiql?api-version=6.0";
 	
+	//check if we want to limit the number returned
+	if ($top != '') 
+		$url = $url . '&$top=' . $top;
+	
 	$curl = curl_init(); // we use curl to get the results - easy
 	
 	$json_string = '{ "query": '. $Wiql . ' }';
@@ -177,9 +186,10 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	if ($turn_on_debug == 1) {
 		print "<!-- debug: \n";
-		print "json_string is: " . esc_html($json_string) . "\n";
+		print "json_string is: " . $json_string . "\n";
 		print "curl_exec returned: ";
-		print_r($data);
+		$r_data = print_r($data, true);
+		$r_data = str_replace("\n", "\r\n", $r_data);
 		print "\n";
 		print "-->\n";
 	}
@@ -1155,9 +1165,31 @@ function wp_devops_query($atts = [], $content = null) {
 	else
 		$charttype = "bar";
 	
+	if (isset($atts['title']))
+		$devops_title = sanitize_text_field($atts['title']);
+	else
+		$devops_title = "";
+	/* shows the x title on everything except pie */
+	if (isset($atts['x-title']))
+		$devops_xtitle = sanitize_text_field($atts['x-title']);
+	else
+		$devops_xtitle = "";
+	/* shows the y title on everything except pie */
+	if (isset($atts['y-title']))
+		$devops_ytitle = sanitize_text_field($atts['y-title']);
+	else
+		$devops_ytitle = "";
+	
+	/* This allows us to use a php function to translate the value */
+	if (isset($atts['truncate']))
+		$devops_truncate = sanitize_text_field($atts['truncate']);
+	else
+		$devops_truncate = "";
+	
 	$skip_devops_settings_form = 1;	
 	
 	$barColors = array("#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC", "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499", "#22AA99", "#AAAA11", "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#651067");
+	$barColorsSize = count($barColors);
 
 
 	$sql_setup = "select a.entry_index, a.pat_token," . 
@@ -1231,8 +1263,11 @@ function wp_devops_query($atts = [], $content = null) {
 		if (isset($thefields->{$wiql_fieldname}))
 			$thevalue = strval($thefields->{$wiql_fieldname});
 		else
-			$thevalue = "(blank}";
+			$thevalue = "(Blank)";
 		
+		// check if we need to truncate the value (like maybe a date)
+		if ($devops_truncate != "") 
+			$thevalue = substr($thevalue, 0, $devops_truncate);
 		//print "<PRE>thevalue is:" . $thevalue . "</PRE>\n";
 		
 		$srch = array_search($thevalue, $index_array, true);
@@ -1274,9 +1309,13 @@ function wp_devops_query($atts = [], $content = null) {
 	}
 	print '];' . "\n";
 	
+	$barindex = 0;
 	print '	var barColors = [';
 	for($i = 0; $i < $acount; $i++) {
-		print '"' . $barColors[$i] . '"';
+		if ($barindex >= $barColorsSize)
+			$barindex = 0;
+		print '"' . $barColors[$barindex] . '"';
+		$barindex = $barindex + 1;
 		if ($i < ( $acount - 1) )
 			print ',';
 	}
@@ -1300,10 +1339,28 @@ function wp_devops_query($atts = [], $content = null) {
 	//print "			indexAxis: 'y', \n";
 	print '			title: {' . "\n";
 	print '			display: true,' . "\n";
-	print '			text: "Query Name:' . $queryname . '"' . "\n";
-	print '			}' . "\n";
-	print '		}' . "\n";
+	print '			text: "' . $devops_title . '"' . "\n";
+	print '			},' . "\n";
+	if (($charttype != "pie"))  {
+		print '	        scales: { ' . "\n";
+		print '           yAxes: [{' ."\n";
+		print '				scaleLabel: { ' . "\n";
+		print '                display: true, ' . "\n";
+		print '                labelString: "' . $devops_ytitle . '" ' . "\n";
+		print '             }' . "\n";
+		print '			  }],' . "\n";
+		print '           xAxes: [{' ."\n";
+		print '				scaleLabel: { ' . "\n";
+		print '                display: true, ' . "\n";
+		print '                labelString: "' . $devops_xtitle . '" ' . "\n";
+		print '             }' . "\n";
+		print '			  }],' . "\n";
+		print '         }, ' . "\n";
+	}
+	print '		},' . "\n";
 	print '	});' . "\n";
+	
+
 	print '	</script>' . "\n";
 			
 	$content = ob_get_contents();
@@ -1836,9 +1893,11 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
-	//print '<th data-orderable="false">&nbsp;</th>';
-	print '<th data-orderable="false"></th>';
+	print '<th data-orderable="false" style="width: 1px;">&nbsp;</th>';
+	print '<th data-orderable="false" style="width:100px;"></th>';
 	print '<th data-orderable="false"></th>' . "\n";
+	///print '<th style="width:100px;"></th>';
+	///print '<th></th>' . "\n";
 	print "        </tr>\n";
 	print "    </thead>\n";
 	print "    <tbody>\n";
@@ -1868,7 +1927,7 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 		curl_close($curl_workitem);
 		
 		$item_decode  = json_decode($item_data , false );
-		$item_json = $item_decode->{'value'}[0]; // trasverse json structure
+		$item_json = $item_decode->{'value'}[0]; // trasverse json structure --- need to check if value is set.
 		
 		
 		//$item_json = $item_decode[$x];
@@ -1920,7 +1979,7 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 		print '<tr  style="width: 1px; background-color:White"; >';
 		
 
-		//print('<td style="width: 1px; vertical-align: top; visibility: hidden;">' . esc_html($x) . ".0</td>");
+		print('<td style="width: 1px; vertical-align: top; visibility: hidden;">' . esc_html($x) . ".0</td>");
 		
 		print ("<script>\n") ;
 		$detail_show_workitem = show_workitem($workitem_id, $workitem_Title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
@@ -1932,7 +1991,7 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 			print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html($workitem_Title) . '";' . "\n";
 		print ("</script>\n") ;
 		
-		print '<td style="vertical-align:top"; >' . $workitem_id . "</td>";
+		print '<td style="vertical-align:top;">' . $workitem_id . "</td>";
 		print "<td>";
 			$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
 			print $div_value;
@@ -1965,8 +2024,10 @@ print'
 	<script>
 
 (function() {
-	$("#' . esc_html($tableid) . '").dataTable({
-	})(jQuery);
+	$("#' . $tableid . '").dataTable({
+	});
+})(jQuery);
+
 </script>
 ';
 	
@@ -1981,11 +2042,7 @@ print'
     return $content;
 }
 
-
-
-
 add_shortcode ('wp_devops_list_sprint','wp_devops_list_sprint');
-
 add_shortcode ('wp_devops_wiql','wp_devops_wiql');
 add_shortcode ('wp_devops_current_sprint','wp_devops_current_sprint');
 add_shortcode ('wp_devops_tab_start','wp_devops_tab_start');
