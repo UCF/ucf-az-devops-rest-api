@@ -120,6 +120,11 @@ function wp_devops_wiql($atts = [], $content = null) {
 	else
 		$sort = "";
 	
+	if(isset($atts['top']))
+		$top = sanitize_text_field($atts['top']);
+	else
+		$top = "";
+	
 	if ($turn_on_debug == 1) 
 		print "<!-- debug: sort value is: " . esc_html($sort) . "-->\n";
 
@@ -161,6 +166,10 @@ function wp_devops_wiql($atts = [], $content = null) {
 	
 	// This is the REST url for the Wiql API
 	$url = "https://dev.azure.com/" . $Organization . "/" . $Project . "/_apis/wit/wiql?api-version=6.0";
+	
+	//check if we want to limit the number returned
+	if ($top != '') 
+		$url = $url . '$top=' . $top;
 	
 	$curl = curl_init(); // we use curl to get the results - easy
 	
