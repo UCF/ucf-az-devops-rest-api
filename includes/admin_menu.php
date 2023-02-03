@@ -177,8 +177,8 @@ Function ucf_devops_rest_manage(){
 		$ucf_wiql_id_index  = sanitize_text_field($_POST['wiql_id_index']);
 		
 		$sql = sprintf("update " . $wpdb->base_prefix . "ucf_devops_query " . 
-			"set xaxis_field='%s', yaxis_field='%s'" .
-			"where queryid='%s' and wiql_id_index='%s' ", $ucf_xaxis_field_ID, $ucf_yaxis_field_ID, $ucf_queryid, $ucf_wiql_id_index);
+			"set xaxis_field='%s'" .
+			"where queryid='%s' and wiql_id_index='%s' ", $ucf_xaxis_field_ID, $ucf_queryid, $ucf_wiql_id_index);
 		$return = $wpdb->query($sql);
 		if ($return == false) {
 				echo "<P>Update into ucf_devops_query failed: " . ' - wpdb->last_error : ' . esc_html($wpdb->last_error);
@@ -685,9 +685,9 @@ $('.ok').on('click', function(e){
 		print '</h3><P>'; 
 				
 		$sql = "select entry_index,wiql_id_index,queryid,queryname, xaxis_field,yaxis_field from " . $wpdb->base_prefix . "ucf_devops_query";
-		echo '<table style="width: 50%; border: 1px solid black" id="myTable" >';
+		echo '<table style="width: 80%; border: 1px solid black" id="myTable" >';
 		echo '<tr >
-		<th style="width: 30px; border: 1px solid black;" >ShortCode</th>
+		<th style="width: 60px; border: 1px solid black;" >ShortCode</th>
 		<th style="width: 10px; border: 1px solid black;" >WiQL ID</th>
 		<th style="width: 10px; border: 1px solid black;" >Entry ID</th>		
 		<th style="width: 50px; border: 1px solid black;" >Query ID</th>
@@ -702,7 +702,9 @@ $('.ok').on('click', function(e){
 			echo '<tr>';
 			
 			echo '<td style="width: 50px; border: 1px solid black;">' ;
-			echo '[wp_devops_query wiql_id_index="' . esc_html($element->wiql_id_index) . '"]</td>';
+			echo '[wp_devops_query wiql_id_index="' . esc_html($element->wiql_id_index) . '"]<br>';
+			echo '[wp_devops_pretty_query wiql_id_index="' . esc_html($element->wiql_id_index) . '"]';
+			echo '</td>';
 			
 			
 			echo '<td style="width: 10px; border: 1px solid black;" >';
