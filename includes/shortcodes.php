@@ -14,6 +14,7 @@ $custom_sort_array = array();
 $turn_on_debug = 0;
 
 
+
 function devops_cmp($a, $b) {
 	global $devops_sort_field;
 	global $turn_on_debug;
@@ -360,9 +361,10 @@ function wp_devops_wiql($atts = [], $content = null) {
 			$workitem_Area = isset( $item_json->{'fields'}->{'Custom.WebsiteAreas'} ) ? $item_json->{'fields'}->{'Custom.WebsiteAreas'} : '';
 			$workitem_Title = isset( $item_json->{'fields'}->{'System.Title'} ) ? $item_json->{'fields'}->{'System.Title'} : '';
 			$workitem_IterationPath = isset($item_json->{'fields'}->{'System.IterationPath'}) ? $item_json->{'fields'}->{'System.IterationPath'} : '';
+			$workitem_CreatedDate = isset($item_json->{'fields'}->{'System.CreatedDate'}  ) ? $item_json->{'fields'}->{'System.CreatedDate'}: '';
 
 			print ("<script>\n") ;
-			$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
+			$detail_show_workitem = show_workitem($workitem_id, $workitem_title, $workitem_assignee, $workitem_CreatedDate, $workitem_descr, $workitem_Area, $workitem_IterationPath );
 			$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
 			print "var Detail_" . esc_html($x) . "_0 = \"" . $sprint_detail . '";' . "\n";
 			if(strlen($workitem_Title) > 50)
@@ -920,7 +922,7 @@ li.extra {
 						
 						$sprint_text = $sprint_text . "<br></div>";
 		
-						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, '', $detail_descr, $detail_Area, $detail_IterationPath );
+						$detail_show_workitem = show_workitem($detail_id, $detail_title, $detail_assignee, $detail_createdDate, $detail_descr, $detail_Area, $detail_IterationPath );
 						$sprint_detail = $sprint_detail . str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
 						print "var Detail_" . $x . "_" . $w_z . " = \"" . $sprint_detail . '";' . "\n";
 						if(strlen($detail_title) > 50)
@@ -999,16 +1001,41 @@ li.extra {
 	ob_end_clean();
     return $content;
 }
+
+function devops_ins_post($title, $id, $new)
+{
+	global $wpdb;
+	
+	// First we check to see if the post is already here
+	//get_page_by_title( string $page_title, string $output = OBJECT, string|array $post_type = 'page' ): WP_Post|array|null
+	
+	$ft = $id . '-' . $title;
+	$find_wp = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_title = %s AND post_type='devops'", $ft ));
+
+	if($find_wp) {
+			// Page Exists
+	} else {
+		// If post is not here we need to insert it
+		$post_id = wp_insert_post( $new );
+//		if( $post_id ){
+//			echo "Post successfully published!";
+//		} else {
+//			echo "Something went wrong, try again.";
+//		}
+	}
+}
+
+
 //
 // this function is designed to show a work item data elements 
-function show_workitem($id, $title, $assignee, $comment, $description, $area, $iteration )
+function show_workitem($id, $title, $assignee, $date, $description, $area, $iteration )
 {
 	global $turn_on_debug;
 	//$id = "16007";
 	//$title = "INT013 PeopleFirst Payroll Deductions BNO002 - Duplicate Inputs";
 	//$description = "Quick Brown Fox";
 	//$assignee = "brad";
-	//$comment = "";
+	//$date = "";
 	//$area = "area";
 	//$iteration = "iteration";
 	
@@ -1017,11 +1044,22 @@ function show_workitem($id, $title, $assignee, $comment, $description, $area, $i
 	//$assignee = str_replace("'", "", $assignee);
 	//$assignee = str_replace('"', '', $assignee);
 	//$assignee = str_replace("\r", "", str_replace("\n", "", $assignee));
-	$comment = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $comment)));
+	$date = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $date)));
 	$description = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $description)));
 	$description = str_replace('\\', '', $description);
 	//$area = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $area)));
 	//$iteration = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $iteration)));
+	
+	$new = array(
+		'post_title' => $id . '-' . $title,
+		'post_content' => $description ,
+		'post_status' => 'publish',
+		'post_date' => $date,
+		'tags_input' => array('DevOps'),
+		'post_type' => 'DevOps',	
+	);
+
+	devops_ins_post($title, $id, $new);
 	
 	
 	
@@ -1677,7 +1715,7 @@ function wp_devops_list_sprint($atts = [], $content = null) {
 							$CellValue = $ParentID;
 						else
 							$CellValue = $detail_id;
-						$detail_show_workitem = show_workitem($CellValue, $detail_title, $detail_assignee, '', $detail_descr, ' ', $detail_IterationPath );
+						$detail_show_workitem = show_workitem($CellValue, $detail_title, $detail_assignee, $detail_createdDate, $detail_descr, ' ', $detail_IterationPath );
 						
 						print "<!-- wp_devops_list_sprint Debugging Detail\n";
 						print "detail_id: " . esc_html($detail_id) . "\n";
@@ -1890,12 +1928,15 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 	fclose($css_open);
 	print( "<style>\n" . $css_data . "\n</style>\n");
 	
-	print '<table id="' . $tableid . '" class="display" style="border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
+	//print '<table id="' . $tableid . '" class="display" style="border: 1px solid; border-collapse: collapse; width: 100%; font-size: 12px;">' . "\n";
+	print '<table id="' . $tableid . '" class="display" style="border: none; width: 100%; font-size: 12px;">' . "\n";
+
 	print "    <thead>\n";
-	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
-	print '<th data-orderable="false" style="width: 1px;">&nbsp;</th>';
-	print '<th data-orderable="false" style="width:100px;"></th>';
-	print '<th data-orderable="false"></th>' . "\n";
+	//print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
+	print '        <tr style="background-color:White; border: none;">' . "\n";
+	print '<th data-orderable="false" style="border: none; width: 1px;">&nbsp;</th>';
+	print '<th data-orderable="false" style="border: none; width:100px;"></th>';
+	print '<th data-orderable="false" style="border: none;" ></th>' . "\n";
 	///print '<th style="width:100px;"></th>';
 	///print '<th></th>' . "\n";
 	print "        </tr>\n";
@@ -1976,13 +2017,13 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 				break;
 		}
 		
-		print '<tr  style="width: 1px; background-color:White"; >';
+		print '<tr  style="border: none; background-color:White"; >';
 		
 
-		print('<td style="width: 1px; vertical-align: top; visibility: hidden;">' . esc_html($x) . ".0</td>");
+		print('<td style="border: none; width: 1px; background-color:White; vertical-align: top; visibility: hidden;">' . esc_html($x) . ".0</td>");
 		
 		print ("<script>\n") ;
-		$detail_show_workitem = show_workitem($workitem_id, $workitem_Title, $workitem_assignee, '', $workitem_descr, $workitem_Area, $workitem_IterationPath );
+		$detail_show_workitem = show_workitem($workitem_id, $workitem_Title, $workitem_assignee, $workitem_CreatedDate, $workitem_descr, $workitem_Area, $workitem_IterationPath );
 		$sprint_detail = str_replace('"', '\"', str_replace("\r", "", str_replace("\n", "", $detail_show_workitem)));
 		print "var Detail_" . esc_html($x) . "_0 = \"" . $sprint_detail . '";' . "\n";
 		if(strlen($workitem_Title) > 50)
@@ -1991,8 +2032,8 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 			print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html($workitem_Title) . '";' . "\n";
 		print ("</script>\n") ;
 		
-		print '<td style="vertical-align:top;">' . $workitem_id . "</td>";
-		print "<td>";
+		print '<td style="border: none; vertical-align:top;"><H2>' . $workitem_id . "</H2></td>";
+		print '<td >';
 			$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
 			print $div_value;
 			print "<H2>" . esc_html($workitem_Title) . "</H2>";
