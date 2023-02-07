@@ -12,6 +12,7 @@
 $devops_sort_field = "";
 $custom_sort_array = array();
 $turn_on_debug = 0;
+$insert_as_posts = 1;
 
 
 
@@ -1059,7 +1060,8 @@ function show_workitem($id, $title, $assignee, $date, $description, $area, $iter
 		'post_type' => 'DevOps',	
 	);
 
-	devops_ins_post($title, $id, $new);
+	if($insert_as_posts == 1)
+		devops_ins_post($title, $id, $new);
 	
 	
 	
