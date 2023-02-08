@@ -28,6 +28,7 @@
 	remove_shortcode ('wp_devops_wiql');
 	remove_shortcode ('wp_devops_query');
 	remove_shortcode ('wp_devops_query_pretty');
+	remove_shortcode ('wp_devops_query_blog');
 
 	
 	remove_menu_page( 'ucf_devops_rest_main_menu'); 
