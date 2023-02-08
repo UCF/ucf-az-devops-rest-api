@@ -12,7 +12,7 @@
 $devops_sort_field = "";
 $custom_sort_array = array();
 $turn_on_debug = 0;
-$insert_as_posts = 1;
+$insert_as_posts = 0;
 
 
 
