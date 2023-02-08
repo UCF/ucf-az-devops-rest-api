@@ -1938,7 +1938,7 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 	print "    <thead>\n";
 	print '        <tr style="background-color:#FFC409; border-bottom: 1px solid black;">' . "\n";
 	//print '        <tr style="background-color:White; border: none;">' . "\n";
-	print '<th data-orderable="false" style="border: none; width: 1px;">&nbsp;</th>';
+	print '<th data-orderable="false" style="border: none; width: 15px;">&nbsp;</th>';
 	print '<th data-orderable="false" style="border: none; width:100px;"></th>';
 	print '<th data-orderable="false" style="border: none;" ></th>' . "\n";
 	///print '<th style="width:100px;"></th>';
