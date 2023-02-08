@@ -2036,16 +2036,16 @@ function wp_devops_query_pretty($atts = [], $content = null) {
 			print 'var DetailTitle_' . esc_html($x) . '_0 = "' . esc_html($workitem_Title) . '";' . "\n";
 		print ("</script>\n") ;
 		
-		print '<td style="border: none; vertical-align:top;"><H2>' . $workitem_id . "</H2></td>";
+		print '<td style="border: none; vertical-align:top;"><H3>' . $workitem_id . "</H3></td>";
 		print '<td >';
 			$div_value = '<div style="cursor: pointer; " onclick="detail.open(' . $x . ', 0)"> '; 
 			print $div_value;
-			print "<H2>" . esc_html($workitem_Title) . "</H2>";
+			print "<H3>" . esc_html($workitem_Title) . "</H3>";
 			print "<b>Date: " . esc_html(substr($workitem_CreatedDate, 0, 10)) .  "</b>";
-			print '<br><div style="overflow:hidden; width:500px; max-height:150px; vertical-align:top; ">' . $display_descr . "</div>" ;
-			print "<br>By ". esc_html($workitem_CreatedBy);
-			print "<br>Category: " . esc_html($workitem_Category);
-			print "</dev>";
+			print '<br><div style="text-align: left; overflow:hidden; width:500px; max-height:150px; vertical-align:top; ">' . $display_descr . "</div>\n" ;
+			print '<br><div style="text-align: left;">By '. esc_html($workitem_CreatedBy) . "</div>\n" ;
+			print '<div style="text-align: left;">Category: ' . esc_html($workitem_Category) . "</div>\n" ;
+			print "</div>";
 			print "<hr>";
 					
 		print ("</td>");
