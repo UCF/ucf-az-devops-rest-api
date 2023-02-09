@@ -26,7 +26,7 @@
 	remove_shortcode ('wp_devops_tab_end');
 	remove_shortcode ('wp_devops_list_sprint');
 	remove_shortcode ('wp_devops_wiql');
-	remove_shortcode ('wp_devops_query');
+	remove_shortcode ('wp_devops_query_chart');
 	remove_shortcode ('wp_devops_query_pretty');
 	remove_shortcode ('wp_devops_query_blog');
 
