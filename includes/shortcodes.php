@@ -1133,7 +1133,7 @@ body {font-family: Arial;}
 .tab {
   overflow: hidden;
   border: 1px solid #ccc;
-  background-color: #f1f1f1;
+  background-color: #000000; /* was this but was hard to see on white backgrounds maybe make this an argument? #f1f1f1; */
 }
 
 /* Style the buttons inside the tab */
